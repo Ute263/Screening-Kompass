@@ -1,9 +1,8 @@
 export const EVIDENCE_CODES = [
-  { value: "S", short: "S", label: "selbstständig und sicher", appRating: "+" },
-  { value: "H", short: "H", label: "nach kurzem Hinweis", appRating: "o" },
-  { value: "V", short: "V", label: "nach Vormachen oder visuellem Modell", appRating: "o" },
-  { value: "G", short: "G", label: "gemeinsam oder deutlich geführt", appRating: "-" },
-  { value: "N", short: "N", label: "noch nicht gezeigt", appRating: "-" },
+  { value: "++", short: "++", label: "selbstständig und sicher", appRating: "+" },
+  { value: "+", short: "+", label: "nach kurzem Hinweis", appRating: "o" },
+  { value: "o", short: "o", label: "nach Vormachen, visuellem Modell oder mit Unterstützung", appRating: "o" },
+  { value: "-", short: "-", label: "trotz deutlicher Unterstützung noch nicht gezeigt", appRating: "-" },
   { value: "?", short: "?", label: "nicht beurteilbar", appRating: "nb" }
 ];
 

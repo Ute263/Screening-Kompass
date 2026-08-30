@@ -9,8 +9,8 @@ function suggestedRating(codes) {
   if (!observed.length) return "nb";
   const known = observed.filter((code) => code !== "?");
   if (!known.length) return "nb";
-  if (known.some((code) => code === "G" || code === "N")) return "-";
-  if (known.every((code) => code === "S")) return "+";
+  if (known.some((code) => code === "-")) return "-";
+  if (known.every((code) => code === "++")) return "+";
   return "o";
 }
 

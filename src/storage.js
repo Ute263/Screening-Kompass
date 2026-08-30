@@ -1,9 +1,19 @@
 const STORAGE_KEY = "screeningKompass:case:v1";
 let memoryState = null;
 
+const LEGACY_CODE_MAP = Object.freeze({ S: "++", H: "+", V: "o", G: "o", N: "-", "?": "?" });
+
+function migrateState(data) {
+  const responses = Object.fromEntries(Object.entries(data?.responses || {}).map(([key, response]) => [
+    key,
+    { ...response, code: LEGACY_CODE_MAP[response?.code] || response?.code || "" }
+  ]));
+  return { ...data, schemaVersion: 2, responses };
+}
+
 export function createEmptyState() {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     caseData: {
       label: "",
       className: "",
@@ -33,7 +43,7 @@ export function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return memoryState || createEmptyState();
-    const parsed = JSON.parse(raw);
+    const parsed = migrateState(JSON.parse(raw));
     return {
       ...createEmptyState(),
       ...parsed,
@@ -78,14 +88,15 @@ export async function importBackup(file) {
   const text = await file.text();
   const parsed = JSON.parse(text);
   const data = parsed.data || parsed;
-  if (!data || data.schemaVersion !== 1 || typeof data.responses !== "object") {
+  if (!data || ![1, 2].includes(data.schemaVersion) || typeof data.responses !== "object") {
     throw new Error("Die Sicherungsdatei gehört nicht zu dieser App-Version.");
   }
+  const migrated = migrateState(data);
   const next = {
     ...createEmptyState(),
-    ...data,
-    caseData: { ...createEmptyState().caseData, ...(data.caseData || {}) },
-    priorities: (data.priorities || []).filter((key) => !String(key).includes("|"))
+    ...migrated,
+    caseData: { ...createEmptyState().caseData, ...(migrated.caseData || {}) },
+    priorities: (migrated.priorities || []).filter((key) => !String(key).includes("|"))
   };
   return saveState(next);
 }
