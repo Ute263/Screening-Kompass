@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Screening-Kompass">
+  <rect width="512" height="512" rx="112" fill="#ffffff"/>
+  <path d="M126 128h248M126 256h168M126 384h248" fill="none" stroke="#1d5f72" stroke-width="38" stroke-linecap="round"/>
+  <circle cx="360" cy="256" r="72" fill="#e5f4f6" stroke="#1479d1" stroke-width="30"/>
+  <path d="m330 258 24 24 48-58" fill="none" stroke="#1479d1" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

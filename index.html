@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="description" content="Lokales Auswertungstool für den pädagogischen Screening-Baukasten Grundschule" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./assets/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>Screening-Kompass</title>
+  </head>
+  <body>
+    <div id="app">
+      <main class="boot-screen">
+        <div>
+          <span>SCREENING-KOMPASS</span>
+          <h1>Die App wird gestartet …</h1>
+          <p>Wenn diese Meldung stehen bleibt, wird die Datei nur in einer geschützten Vorschau angezeigt. Bitte die ZIP-Datei herunterladen, entpacken und die darin enthaltene Datei öffnen.</p>
+        </div>
+      </main>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script>
+      window.addEventListener("error", function (event) {
+        var target = document.getElementById("app");
+        if (!target) return;
+        target.innerHTML = '<main class="boot-screen"><div><span>SCREENING-KOMPASS</span><h1>Die App konnte nicht gestartet werden.</h1><p>Bitte verwende die entpackte ZIP-Datei oder die Netlify-Version. Technischer Hinweis: ' + String(event.message || "unbekannter Fehler").replace(/[<>]/g, "") + '</p></div></main>';
+      });
+    </script>
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>

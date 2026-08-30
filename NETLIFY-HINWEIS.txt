@@ -1,0 +1,10 @@
+SCREENING-KOMPASS AUF NETLIFY
+
+Die Netlify-ZIP-Datei ist so aufgebaut, dass „index.html“ direkt auf der obersten Ebene liegt.
+
+Wenn Netlify die ZIP-Datei nicht direkt annimmt:
+1. ZIP-Datei entpacken.
+2. Den vollständigen entpackten Ordner in den manuellen Netlify-Deploy ziehen.
+
+Die App speichert Falldaten weiterhin nur lokal im jeweiligen Browser. Es werden keine Falldaten an Netlify übertragen.
+
