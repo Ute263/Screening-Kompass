@@ -9,6 +9,7 @@ const APP_SHELL = [
   "./src/data.js",
   "./src/competencies.js",
   "./src/competency-links.js",
+  "./src/foerderkompass-transfer.js",
   "./src/report.js",
   "./src/storage.js"
 ];
