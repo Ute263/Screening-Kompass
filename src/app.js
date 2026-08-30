@@ -2,6 +2,7 @@ import { APP_RATINGS, AREAS, EVIDENCE_CODES, MODULE_GROUPS, MODULES, PRINT_SHEET
 import { COMPETENCIES, COMPETENCY_AREAS, COMPETENCY_BY_ID } from "./competencies.js";
 import { competencyIdsForObservation } from "./competency-links.js";
 import { buildCompetencyCoverage, buildProfile, buildTransferText, progressForArea, progressForModule, reportForRow } from "./report.js";
+import { HELP_LEVELS, OUTCOME_LEVELS, assessmentSpecFor, deriveObservationCode, documentationForObservation } from "./assessment.js";
 import { createEmptyState, exportBackup, importBackup, loadState, resetState, saveState } from "./storage.js";
 
 const app = document.querySelector("#app");
@@ -9,7 +10,6 @@ const toast = document.querySelector("#toast");
 const navItems = [
   ["fall", "Fall"],
   ["modules", "Module"],
-  ["material", "Aufgaben"],
   ["observe", "Beobachten"],
   ["competencies", "Kompetenzen"],
   ["evaluate", "Auswerten"],
@@ -112,8 +112,10 @@ function header() {
         ? ["print", "Ergebnisse drucken / PDF"]
         : currentView === "material"
           ? ["observe", "Beobachtung starten"]
-          : [currentView === "fall" ? "modules" : "material", currentView === "fall" ? "Module auswählen" : "Aufgaben auswählen"];
-  const navIcons = { fall: "folder", modules: "grid", material: "print", observe: "eye", competencies: "check", evaluate: "bars", results: "doc" };
+          : currentView === "modules"
+            ? ["observe", "Beobachtung starten"]
+            : ["modules", "Module auswählen"];
+  const navIcons = { fall: "folder", modules: "grid", observe: "eye", competencies: "check", evaluate: "bars", results: "doc" };
   return `
     <header class="app-header no-print">
       <button class="brand" data-action="nav" data-view="fall" aria-label="Zur Fallübersicht">
@@ -208,7 +210,7 @@ function modulesView() {
           <h1>Module auswählen</h1>
           <p>Wähle nur die Bereiche aus, die zur aktuellen Fragestellung beitragen.</p>
         </div>
-        <button class="button button-primary" data-action="nav" data-view="material">Aufgaben auswählen ${icon("arrowRight", 17)}</button>
+        <div class="page-heading-actions"><button class="button button-secondary" data-action="nav" data-view="material">${icon("print", 17)} Material & Druck</button><button class="button button-primary" data-action="nav" data-view="observe">Beobachtung starten ${icon("arrowRight", 17)}</button></div>
       </section>
       <div class="module-selection-layout">
         <div class="module-groups">
@@ -237,7 +239,8 @@ function modulesView() {
           <div class="summary-number"><strong>${selected.size}</strong><span>Module</span></div>
           <div class="summary-number"><strong>${totalItems}</strong><span>Beobachtungen</span></div>
           <p>Du kannst die Auswahl jederzeit ergänzen. Bereits eingetragene Ergebnisse bleiben erhalten.</p>
-          <button class="button button-primary button-block" data-action="nav" data-view="material">Aufgaben auswählen</button>
+          <button class="button button-secondary button-block" data-action="nav" data-view="material">${icon("print", 17)} Material & Druck</button>
+          <button class="button button-primary button-block" data-action="nav" data-view="observe">Beobachtung starten ${icon("arrowRight", 17)}</button>
         </aside>
       </div>
     </main>
@@ -290,8 +293,8 @@ function materialView() {
     <main class="simple-page materials-page">
       <section class="page-heading">
         <div>
-          <h1>Aufgaben und Material auswählen</h1>
-          <p>Passend zu den gewählten Modulen werden die Originalseiten aus dem Screening-Baukasten angeboten.</p>
+          <h1>Material und Druck</h1>
+          <p>Hier können bei Bedarf die zu den gewählten Modulen passenden Originalseiten aus dem Screening-Baukasten gedruckt werden.</p>
         </div>
         <button class="button button-primary" data-action="print-materials" ${selectedCount ? "" : "disabled"}>${icon("print", 17)} ${selectedCount} Seiten drucken</button>
       </section>
@@ -376,10 +379,35 @@ function moduleRail(currentModule) {
   `;
 }
 
-function evidenceButtons(moduleId, observation, currentCode) {
-  return `<div class="evidence-control" role="group" aria-label="Beobachtungscode für ${escapeHtml(observation.text)}">
-    ${EVIDENCE_CODES.map((code) => `<button class="evidence-button ${currentCode === code.value ? "is-selected" : ""}" title="${escapeHtml(code.label)}" data-action="set-code" data-module="${moduleId}" data-item="${observation.id}" data-code="${code.value}">${code.short}</button>`).join("")}
-  </div>`;
+function automaticCodeBadge(code) {
+  if (!code) return `<span class="auto-code is-open">offen</span>`;
+  return `<span class="auto-code code-${code === "++" ? "plusplus" : code === "+" ? "plus" : code === "?" ? "nb" : code}">${code}</span>`;
+}
+
+function scoringControls(moduleId, observation, response) {
+  const spec = assessmentSpecFor(moduleId, observation.id, observation.text);
+  const code = deriveObservationCode(response, spec);
+  const task = documentationForObservation(moduleId, observation, {});
+  const help = response.help || "none";
+  if (spec.type === "count") {
+    return `
+      <div class="task-documentation"><span>Konkrete Aufgabe</span><p>${escapeHtml(task)}</p></div>
+      <div class="scoring-grid">
+        <label class="field"><span>Richtig gelöst</span><div class="score-input"><input type="number" min="0" max="${spec.total}" step="1" data-score-correct="${moduleId}:${observation.id}" value="${response.correct ?? ""}" placeholder="0" /><b>von ${spec.total}</b></div></label>
+        <label class="field"><span>Benötigte Hilfe</span><select data-score-help="${moduleId}:${observation.id}">${HELP_LEVELS.map((entry) => `<option value="${entry.value}" ${help === entry.value ? "selected" : ""}>${entry.label}</option>`).join("")}</select></label>
+        <label class="assessment-check"><input type="checkbox" data-score-nb="${moduleId}:${observation.id}" ${response.notAssessable ? "checked" : ""} /><span>Nicht beurteilbar</span></label>
+        <div class="automatic-result"><span>Automatische Einordnung</span>${automaticCodeBadge(code)}<small>${code ? "aus Ergebnis und benötigter Hilfe" : "Ergebnis eintragen"}</small></div>
+      </div>
+    `;
+  }
+  return `
+    <div class="task-documentation"><span>Konkrete Beobachtung / Aufgabe</span><p>${escapeHtml(task)}</p></div>
+    <div class="scoring-grid">
+      <label class="field"><span>Beobachtetes Ergebnis</span><select data-score-outcome="${moduleId}:${observation.id}"><option value="">Bitte auswählen</option>${OUTCOME_LEVELS.map((entry) => `<option value="${entry.value}" ${response.outcome === entry.value ? "selected" : ""}>${entry.label}</option>`).join("")}</select></label>
+      <label class="field"><span>Benötigte Hilfe</span><select data-score-help="${moduleId}:${observation.id}" ${response.outcome === "nb" ? "disabled" : ""}>${HELP_LEVELS.map((entry) => `<option value="${entry.value}" ${help === entry.value ? "selected" : ""}>${entry.label}</option>`).join("")}</select></label>
+      <div class="automatic-result"><span>Automatische Einordnung</span>${automaticCodeBadge(code)}<small>${code ? "aus Beobachtung und benötigter Hilfe" : "Ergebnis auswählen"}</small></div>
+    </div>
+  `;
 }
 
 function observeView() {
@@ -410,11 +438,11 @@ function observeView() {
       ${moduleRail(currentModule)}
       <section class="workspace-main">
         <div class="workspace-title">
-          <div><h1>${currentModule.id} · ${currentModule.title}</h1><p>${currentModule.description}</p></div>
+          <div><h1>${currentModule.id} · ${currentModule.title}</h1><p>${currentModule.description}</p><small class="auto-scoring-note">Die App leitet ++ / + / o / - / ? aus Ergebnis und benötigter Hilfe ab.</small></div>
           <span>${moduleProgress.answered} von ${moduleProgress.total} dokumentiert</span>
         </div>
         <div class="observation-table" role="table" aria-label="Beobachtungsaspekte">
-          <div class="observation-head" role="row"><span>Nr.</span><span>Beobachtungsaspekt</span><span>Evidenz</span></div>
+          <div class="observation-head" role="row"><span>Nr.</span><span>Beobachtungsaspekt</span><span>App-Einordnung</span></div>
           ${currentModule.items.map((observation, itemIndex) => {
             const key = responseKey(currentModule.id, observation.id);
             const response = state.responses[key] || {};
@@ -423,14 +451,14 @@ function observeView() {
               <div class="observation-row ${active ? "is-active" : ""}" role="row" data-action="select-item" data-index="${itemIndex}">
                 <span class="observation-number">${itemIndex + 1}</span>
                 <strong>${observation.text}</strong>
-                ${evidenceButtons(currentModule.id, observation, response.code)}
+                ${automaticCodeBadge(deriveObservationCode(response, assessmentSpecFor(currentModule.id, observation.id, observation.text)))}
               </div>
               ${active ? `
                 <div class="observation-detail">
-                  <label class="field field-wide"><span>Konkreter Beleg</span><textarea rows="4" data-response-field="evidence" data-response-key="${activeKey}" placeholder="Was war konkret zu sehen oder zu hören?">${escapeHtml(activeResponse.evidence || "")}</textarea></label>
+                  ${scoringControls(currentModule.id, observation, response)}
                   <div class="detail-grid">
-                    <label class="field"><span>Hilfreiche Unterstützung</span><input data-response-field="support" data-response-key="${activeKey}" value="${escapeHtml(activeResponse.support || "")}" placeholder="z. B. visuelles Beispiel, Wahlmöglichkeit" /></label>
-                    <label class="field"><span>Situation / Tagesform</span><input data-response-field="context" data-response-key="${activeKey}" value="${escapeHtml(activeResponse.context || "")}" placeholder="z. B. Einzelarbeit, ausgeruht" /></label>
+                    <label class="field field-wide"><span>Zusätzliche Beobachtung (optional)</span><textarea rows="3" data-response-field="evidence" data-response-key="${key}" placeholder="Nur Besonderheiten ergänzen, die aus Aufgabe und Ergebnis nicht hervorgehen.">${escapeHtml(response.evidence || "")}</textarea></label>
+                    <label class="field"><span>Situation / Tagesform (optional)</span><input data-response-field="context" data-response-key="${key}" value="${escapeHtml(response.context || "")}" placeholder="z. B. Einzelarbeit, ausgeruht" /></label>
                   </div>
                 </div>
               ` : ""}
@@ -445,15 +473,16 @@ function observeView() {
           <section class="mapping-block">
             <h3>${competency.areaLabel}</h3>
             <p><small>${competency.subareaLabel}</small><br /><strong>${competency.label}</strong></p>
-            <span class="mapping-result">${activeResponse.code ? `Beobachtungscode ${activeResponse.code} → ${competency.row?.rating === "nb" ? "n. b." : competency.row?.rating || "offen"}` : "Noch kein Beobachtungscode"}</span>
+            <span class="mapping-result">${deriveObservationCode(activeResponse, assessmentSpecFor(currentModule.id, activeItem.id, activeItem.text)) ? `Automatisch ${deriveObservationCode(activeResponse, assessmentSpecFor(currentModule.id, activeItem.id, activeItem.text))} → ${competency.row?.rating === "nb" ? "n. b." : competency.row?.rating || "offen"}` : "Noch kein auswertbares Ergebnis"}</span>
           </section>
         `).join("") : `<div class="notice compact"><p>Diese Beobachtung liefert Kontext, bewertet aber bewusst keine einzelne FörderKompass-Kompetenz automatisch.</p></div>`}
-        <button class="button button-secondary button-block" data-action="toggle-priority" data-profile="${activeCompetencies[0]?.id || ""}" ${!activeResponse.code || !activeCompetencies.length ? "disabled" : ""}>
+        <button class="button button-secondary button-block" data-action="toggle-priority" data-profile="${activeCompetencies[0]?.id || ""}" ${!deriveObservationCode(activeResponse, assessmentSpecFor(currentModule.id, activeItem.id, activeItem.text)) || !activeCompetencies.length ? "disabled" : ""}>
           ${icon("star", 17)} ${activeCompetencies[0]?.row?.isPriority ? "Priorität entfernen" : "Als Priorität vormerken"}
         </button>
         <div class="code-legend">
-          <h3>Beobachtungscode</h3>
+          <h3>Automatische Codes</h3>
           ${EVIDENCE_CODES.map((code) => `<p><strong>${code.short}</strong><span>${code.label}</span></p>`).join("")}
+          <button class="button button-quiet button-block" data-action="nav" data-view="material">${icon("print", 16)} Material & Druck</button>
         </div>
       </aside>
       <footer class="workspace-footer no-print">
@@ -465,10 +494,9 @@ function observeView() {
   `;
 }
 
-function profileRatingSelect(row) {
-  return `<select class="rating-select rating-${row.rating.replace("+", "plus")}" data-profile-rating="${row.key}" aria-label="App-Einordnung für ${escapeHtml(row.subareaLabel)}">
-    ${APP_RATINGS.map((rating) => `<option value="${rating.value}" ${row.rating === rating.value ? "selected" : ""}>${rating.value === "nb" ? "n. b." : rating.value}</option>`).join("")}
-  </select>`;
+function ratingBadge(row) {
+  const value = row.rating === "nb" ? "n. b." : row.rating;
+  return `<span class="rating-badge rating-${row.rating.replace("+", "plus")}">${value}</span>`;
 }
 
 function selectedCompetencyIds() {
@@ -479,12 +507,6 @@ function selectedCompetencyIds() {
       for (const competencyId of competencyIdsForObservation(module.id, observation.id)) ids.add(competencyId);
     }
   }
-  for (const [competencyId, rating] of Object.entries(state.manualCompetencyRatings || {})) {
-    if (rating && rating !== "nb") ids.add(competencyId);
-  }
-  for (const [competencyId, evidence] of Object.entries(state.competencyEvidence || {})) {
-    if (evidence?.trim()) ids.add(competencyId);
-  }
   return ids;
 }
 
@@ -494,11 +516,6 @@ function coverageStatus(checked, total) {
   return { label: "teilweise überprüft", className: "coverage-partial" };
 }
 
-function competencyRatingSelect(row) {
-  return `<select class="rating-select rating-${row.rating.replace("+", "plus")}" data-competency-rating="${row.competencyId}" aria-label="Einordnung für ${escapeHtml(row.competencyLabel)}">
-    ${APP_RATINGS.map((rating) => `<option value="${rating.value}" ${row.rating === rating.value ? "selected" : ""}>${rating.value === "nb" ? "n. b." : rating.value}</option>`).join("")}
-  </select>`;
-}
 
 function competenciesView() {
   const coverage = buildCompetencyCoverage(state);
@@ -513,7 +530,7 @@ function competenciesView() {
   return `
     <main class="simple-page competency-page">
       <section class="page-heading">
-        <div><h1>Kompetenzabdeckung</h1><p>Alle 290 Einzelkompetenzen des FörderKompass bleiben sichtbar. Nur belegte Kompetenzen erhalten eine Einordnung.</p></div>
+        <div><h1>Kompetenzabdeckung</h1><p>Alle 290 Einzelkompetenzen des FörderKompass bleiben sichtbar. Die Einordnung entsteht ausschließlich aus den dokumentierten Screeningaufgaben.</p></div>
         <button class="button button-primary" data-action="nav" data-view="evaluate">Auswertung öffnen ${icon("arrowRight", 17)}</button>
       </section>
       <section class="competency-summary">
@@ -532,7 +549,7 @@ function competenciesView() {
           ${COMPETENCY_AREAS.map((area) => `<button class="area-chip ${competencyAreaFilter === area.id ? "is-active" : ""}" data-action="competency-area" data-area="${area.id}">${area.label}</button>`).join("")}
         </div>
       </section>
-      <div class="notice notice-yellow competency-note">${icon("info", 18)}<p><strong>Wichtig:</strong> „n. b.“ bedeutet nicht, dass die Kompetenz fehlt, sondern nur, dass sie mit den bisherigen Aufgaben noch nicht ausreichend überprüft wurde. Eine gezielte Prüfung kann rechts in der Zeile mit Beleg dokumentiert werden.</p></div>
+      <div class="notice notice-yellow competency-note">${icon("info", 18)}<p><strong>Wichtig:</strong> „n. b.“ bedeutet nur, dass die Kompetenz mit den bisherigen Aufgaben nicht ausreichend überprüft wurde. Die Bewertung wird hier nicht manuell verändert.</p></div>
       <div class="competency-area-list">
         ${visibleAreas.map((area) => {
           const areaRows = coverage.filter((row) => row.areaId === area.id);
@@ -551,12 +568,12 @@ function competenciesView() {
                 return `<details class="competency-subarea" ${subChecked ? "open" : ""}>
                   <summary><span><strong>${subarea.label}</strong><small>${subChecked} von ${rows.length}</small></span><span class="coverage-chip ${subStatus.className}">${subStatus.label}</span></summary>
                   <div class="competency-table">
-                    <div class="competency-table-head"><span>Einzelkompetenz</span><span>Quelle</span><span>Einordnung</span><span>Beleg / gezielte Prüfung</span><span>Priorität</span></div>
+                    <div class="competency-table-head"><span>Einzelkompetenz</span><span>Quelle</span><span>Einordnung</span><span>Dokumentation</span><span>Priorität</span></div>
                     ${visibleRows.map((row) => `<div class="competency-row">
                       <strong>${escapeHtml(row.competencyLabel)}</strong>
                       <span>${row.fromScreening ? `<span class="source-chip">Screening</span>` : `<span class="source-chip is-open">offen</span>`}</span>
-                      <span>${competencyRatingSelect(row)}</span>
-                      <input data-competency-evidence="${row.competencyId}" value="${escapeHtml(state.competencyEvidence?.[row.competencyId] || "")}" placeholder="konkreter Beleg oder Aufgabe" />
+                      <span>${ratingBadge(row)}</span>
+                      <span class="competency-documentation">${escapeHtml(row.sources?.[0] || "Noch keine Screeningaufgabe zugeordnet.")}</span>
                       <button class="priority-button ${row.isPriority ? "is-active" : ""}" data-action="toggle-priority" data-profile="${row.competencyId}" ${row.rating === "nb" ? "disabled" : ""} aria-label="Förderpriorität umschalten">${icon("star", 17)}</button>
                     </div>`).join("")}
                   </div>
@@ -591,29 +608,29 @@ function evaluateView() {
       </aside>
       <section class="workspace-main">
         <div class="workspace-title"><div><h1>Auswertung</h1><p>Belege auf Ebene einzelner FörderKompass-Kompetenzen prüfen und bis zu drei Bereiche für die spätere Übertragung vormerken.</p></div><span>${state.priorities.length} von 3 vorgemerkt</span></div>
-        <div class="profile-heading"><h2>Kompetenzprofil</h2><p>Die Einordnung gilt nur für die benannte Einzelkompetenz und kann fachlich geändert werden.</p></div>
+        <div class="profile-heading"><h2>Kompetenzprofil</h2><p>Die Einordnung gilt nur für die benannte Einzelkompetenz und wird automatisch aus den dokumentierten Aufgaben abgeleitet.</p></div>
         ${filtered.length ? `
           <div class="profile-table">
-            <div class="profile-head"><span>Förderbereich</span><span>Unterbereich / Kompetenz</span><span>Ergebnis</span><span>Konkreter Beleg</span><span>Priorität</span></div>
+            <div class="profile-head"><span>Förderbereich</span><span>Unterbereich / Kompetenz</span><span>Ergebnis</span><span>Dokumentation</span><span>Priorität</span></div>
             ${filtered.map((row) => `
               <div class="profile-row ${active?.key === row.key ? "is-active" : ""}" data-action="select-profile" data-profile="${row.key}">
                 <span>${row.areaLabel}</span>
                 <strong><small>${row.subareaLabel}</small>${row.competencyLabel}</strong>
-                <span>${profileRatingSelect(row)}</span>
-                <span class="evidence-summary">${escapeHtml(row.evidence[0] || row.sources[0] || "Noch kein konkreter Beleg notiert.")}</span>
+                <span>${ratingBadge(row)}</span>
+                <span class="evidence-summary">${escapeHtml(row.evidence[0] || row.sources[0] || "Noch keine zusätzliche Beobachtung notiert.")}</span>
                 <button class="priority-button ${row.isPriority ? "is-active" : ""}" data-action="toggle-priority" data-profile="${row.key}" aria-label="Priorität umschalten">${icon("star", 17)}</button>
               </div>
             `).join("")}
           </div>
-        ` : `<div class="empty-inline"><h2>Noch keine Auswertung möglich</h2><p>Trage zunächst mindestens einen Beobachtungscode ein.</p><button class="button button-primary" data-action="nav" data-view="observe">Zur Beobachtung</button></div>`}
+        ` : `<div class="empty-inline"><h2>Noch keine Auswertung möglich</h2><p>Dokumentiere zunächst mindestens eine Aufgabe oder Beobachtung.</p><button class="button button-primary" data-action="nav" data-view="observe">Zur Beobachtung</button></div>`}
       </section>
       <aside class="inspector result-inspector no-print">
         <div class="inspector-heading"><h2>Ergebnis im Detail</h2>${icon("info", 18)}</div>
         ${active ? `
           <p class="active-profile-label">${active.areaLabel}<br /><small>${active.subareaLabel}</small><br /><strong>${active.competencyLabel}</strong></p>
           <div class="result-detail-card"><span>Einordnung</span><strong>${active.rating === "nb" ? "nicht beurteilbar" : active.rating}</strong></div>
-          <div class="result-detail-card"><span>Konkrete Belege</span><p>${escapeHtml(active.evidence.join(" · ") || "Noch kein konkreter Beleg notiert.")}</p></div>
-          <div class="result-detail-card"><span>Geprüft mit</span><p>${escapeHtml(active.sources.join(" · ") || "Keine Aufgabe zugeordnet.")}</p></div>
+          <div class="result-detail-card"><span>Zusätzliche Beobachtungen</span><p>${escapeHtml(active.evidence.join(" · ") || "Keine zusätzlichen Beobachtungen notiert.")}</p></div>
+          <div class="result-detail-card"><span>Dokumentation</span><p>${escapeHtml(active.sources.join(" · ") || "Keine Aufgabe zugeordnet.")}</p></div>
           <button class="button button-secondary button-block" data-action="toggle-priority" data-profile="${active.key}">${icon("star", 17)} ${active.isPriority ? "Vormerkung entfernen" : "Für FörderKompass vormerken"}</button>
           <button class="button button-primary button-block" data-action="nav" data-view="results">${icon("doc", 17)} Ergebnisse ansehen</button>
         ` : `<p class="muted">Wähle eine ausgewertete Beobachtung aus.</p>`}
@@ -635,7 +652,7 @@ function resultsView() {
   return `
     <main class="report-page">
       <section class="report-toolbar no-print">
-        <div><h1>Screening-Ergebnisse</h1><p>Beobachtungen, Einordnungen und konkrete Belege als PDF sichern oder ausdrucken.</p></div>
+        <div><h1>Screening-Ergebnisse</h1><p>Beobachtungen, automatische Einordnungen und zugeordnete Screeningaufgaben als PDF sichern oder ausdrucken.</p></div>
         <div class="toolbar-actions">
           <button class="button button-secondary" data-action="nav" data-view="evaluate">Zur Auswertung</button>
           <button class="button button-primary" data-action="print">${icon("doc", 17)} Ergebnisse drucken / PDF</button>
@@ -657,9 +674,9 @@ function resultsView() {
         ${observed.length ? observed.map((row) => `<section class="screening-result-row">
           <div><span>${escapeHtml(row.areaLabel)}</span><small>${escapeHtml(row.subareaLabel)}</small><strong>${escapeHtml(row.competencyLabel)}</strong></div>
           <b>${row.rating}</b>
-          <p><small>Aufgaben: ${escapeHtml(row.sources.join(" · ") || "—")}</small></p>
-        </section>`).join("") : `<section class="empty-report"><h2>Noch keine Ergebnisse</h2><p>Trage zunächst Beobachtungscodes ein.</p></section>`}
-        <footer class="report-note">Die Zuordnung beruht auf pädagogischen Beobachtungen und dokumentierten Hilfebedingungen. Sie ersetzt keine standardisierte, medizinische oder sonderpädagogische Diagnostik.</footer>
+          <p><small><strong>Dokumentation:</strong> ${escapeHtml(row.sources.join(" · ") || "—")}</small></p>
+        </section>`).join("") : `<section class="empty-report"><h2>Noch keine Ergebnisse</h2><p>Dokumentiere zunächst mindestens eine Aufgabe oder Beobachtung.</p></section>`}
+        <footer class="report-note">Die Zuordnung beruht auf den dokumentierten Screeningaufgaben, Ergebnissen und Hilfebedingungen. Sie ersetzt keine standardisierte, medizinische oder sonderpädagogische Diagnostik.</footer>
       </article>
     </main>
   `;
@@ -724,16 +741,7 @@ app.addEventListener("click", async (event) => {
     persist({ rerender: true });
   }
   if (action === "select-item") {
-    if (event.target.closest(".evidence-control")) return;
     state.currentItemIndex = Number(target.dataset.index);
-    persist({ rerender: true });
-  }
-  if (action === "set-code") {
-    event.stopPropagation();
-    const key = responseKey(target.dataset.module, target.dataset.item);
-    state.responses[key] = { ...(state.responses[key] || {}), code: target.dataset.code };
-    const module = moduleById(target.dataset.module);
-    state.currentItemIndex = module.items.findIndex((observation) => observation.id === target.dataset.item);
     persist({ rerender: true });
   }
   if (action === "previous-item") nextObservation(-1);
@@ -821,14 +829,29 @@ app.addEventListener("input", (event) => {
     state.reportEdits[key] = { ...(state.reportEdits[key] || {}), [reportField]: event.target.value };
     persist();
   }
-  const competencyEvidence = event.target.dataset.competencyEvidence;
-  if (competencyEvidence) {
-    state.competencyEvidence[competencyEvidence] = event.target.value;
-    persist();
-  }
 });
 
 app.addEventListener("change", async (event) => {
+  const scoreCorrect = event.target.dataset.scoreCorrect;
+  const scoreOutcome = event.target.dataset.scoreOutcome;
+  const scoreHelp = event.target.dataset.scoreHelp;
+  const scoreNb = event.target.dataset.scoreNb;
+  if (scoreCorrect || scoreOutcome || scoreHelp || scoreNb) {
+    const packed = scoreCorrect || scoreOutcome || scoreHelp || scoreNb;
+    const [moduleId, itemId] = packed.split(":");
+    const key = responseKey(moduleId, itemId);
+    const observation = moduleById(moduleId)?.items.find((item) => item.id === itemId);
+    const spec = assessmentSpecFor(moduleId, itemId, observation?.text || "");
+    const next = { ...(state.responses[key] || {}), legacyCode: "" };
+    if (scoreCorrect) next.correct = event.target.value;
+    if (scoreOutcome) { next.outcome = event.target.value; next.notAssessable = event.target.value === "nb"; }
+    if (scoreHelp) next.help = event.target.value;
+    if (scoreNb) next.notAssessable = event.target.checked;
+    next.code = deriveObservationCode(next, spec);
+    state.responses[key] = next;
+    persist({ rerender: true });
+    return;
+  }
   const moduleId = event.target.dataset.moduleToggle;
   if (moduleId) {
     const wasSelected = state.selectedModules.includes(moduleId);
@@ -853,19 +876,6 @@ app.addEventListener("change", async (event) => {
       ? [...new Set([...(state.selectedPrintSheets || []), printSheetId])]
       : (state.selectedPrintSheets || []).filter((id) => id !== printSheetId);
     state.printSelectionInitialized = true;
-    persist({ rerender: true });
-  }
-  const profileRating = event.target.dataset.profileRating;
-  if (profileRating) {
-    state.manualCompetencyRatings[profileRating] = event.target.value;
-    state.activeProfileKey = profileRating;
-    persist({ rerender: true });
-  }
-  const competencyRating = event.target.dataset.competencyRating;
-  if (competencyRating) {
-    state.manualCompetencyRatings[competencyRating] = event.target.value;
-    state.activeProfileKey = competencyRating;
-    if (event.target.value === "nb") state.priorities = state.priorities.filter((key) => key !== competencyRating);
     persist({ rerender: true });
   }
   if (event.target.id === "backup-import" && event.target.files?.[0]) {

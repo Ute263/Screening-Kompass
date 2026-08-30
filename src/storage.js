@@ -4,16 +4,17 @@ let memoryState = null;
 const LEGACY_CODE_MAP = Object.freeze({ S: "++", H: "+", V: "o", G: "o", N: "-", "?": "?" });
 
 function migrateState(data) {
-  const responses = Object.fromEntries(Object.entries(data?.responses || {}).map(([key, response]) => [
-    key,
-    { ...response, code: LEGACY_CODE_MAP[response?.code] || response?.code || "" }
-  ]));
-  return { ...data, schemaVersion: 2, responses };
+  const responses = Object.fromEntries(Object.entries(data?.responses || {}).map(([key, response]) => {
+    const mappedCode = LEGACY_CODE_MAP[response?.code] || response?.code || "";
+    const hasStructuredInput = response?.correct !== undefined || response?.outcome || response?.notAssessable;
+    return [key, { ...response, code: mappedCode, legacyCode: hasStructuredInput ? (response?.legacyCode || "") : (response?.legacyCode || mappedCode) }];
+  }));
+  return { ...data, schemaVersion: 3, responses };
 }
 
 export function createEmptyState() {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     caseData: {
       label: "",
       className: "",
@@ -88,7 +89,7 @@ export async function importBackup(file) {
   const text = await file.text();
   const parsed = JSON.parse(text);
   const data = parsed.data || parsed;
-  if (!data || ![1, 2].includes(data.schemaVersion) || typeof data.responses !== "object") {
+  if (!data || ![1, 2, 3].includes(data.schemaVersion) || typeof data.responses !== "object") {
     throw new Error("Die Sicherungsdatei gehört nicht zu dieser App-Version.");
   }
   const migrated = migrateState(data);

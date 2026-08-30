@@ -1,6 +1,7 @@
 import { APP_RATINGS, AREAS, EVIDENCE_CODES, MODULES, REPORT_TEMPLATES, profileKey, responseKey } from "./data.js";
 import { COMPETENCIES, COMPETENCY_BY_ID } from "./competencies.js";
 import { competencyIdsForObservation } from "./competency-links.js";
+import { assessmentSpecFor, deriveObservationCode, documentationForObservation, helpLabel } from "./assessment.js";
 
 const codeMap = new Map(EVIDENCE_CODES.map((code) => [code.value, code]));
 
@@ -24,7 +25,10 @@ export function buildProfile(state) {
     if (!state.selectedModules.includes(module.id)) continue;
     for (const observation of module.items) {
       const response = state.responses[responseKey(module.id, observation.id)];
-      if (!response?.code) continue;
+      if (!response) continue;
+      const spec = assessmentSpecFor(module.id, observation.id, observation.text);
+      const code = deriveObservationCode(response, spec) || response.code || "";
+      if (!code) continue;
       for (const competencyId of competencyIdsForObservation(module.id, observation.id)) {
         const competency = COMPETENCY_BY_ID.get(competencyId);
         if (!competency) continue;
@@ -42,39 +46,21 @@ export function buildProfile(state) {
           contexts: [],
           sources: []
         };
-        existing.codes.push(response.code);
+        existing.codes.push(code);
         if (response.evidence) existing.evidence.push(response.evidence);
+        if (response.help && response.help !== "none") existing.supports.push(helpLabel(response.help));
         if (response.support) existing.supports.push(response.support);
         if (response.context) existing.contexts.push(response.context);
-        existing.sources.push(`${module.id} · ${observation.text}`);
+        existing.sources.push(documentationForObservation(module.id, observation, response));
         groups.set(competencyId, existing);
       }
     }
   }
 
-  for (const competency of COMPETENCIES) {
-    const manualRating = state.manualCompetencyRatings?.[competency.id];
-    const manualEvidence = state.competencyEvidence?.[competency.id];
-    if ((!manualRating || manualRating === "nb") && !manualEvidence) continue;
-    const existing = groups.get(competency.id) || {
-      key: competency.id,
-      competencyId: competency.id,
-      competencyLabel: competency.label,
-      areaId: competency.areaId,
-      areaLabel: competency.areaLabel,
-      subareaId: competency.subareaId,
-      subareaLabel: competency.subareaLabel,
-      codes: [], evidence: [], supports: [], contexts: [], sources: []
-    };
-    if (manualEvidence) existing.evidence.push(manualEvidence);
-    if (manualRating && manualRating !== "nb") existing.sources.push("gezielte Kompetenzprüfung / fachliche Einordnung");
-    groups.set(competency.id, existing);
-  }
-
   return [...groups.values()]
     .map((entry) => {
       const suggestion = suggestedRating(entry.codes);
-      const rating = state.manualCompetencyRatings?.[entry.key] || suggestion;
+      const rating = suggestion;
       return {
         ...entry,
         suggestion,
@@ -126,7 +112,9 @@ export function defaultReportFor(row) {
   };
   const evidenceText = row.evidence.length
     ? row.evidence.slice(0, 3).join(" ")
-    : `Zur Kompetenz „${row.competencyLabel}“ zeigte sich ein ${ratingDescription(row.rating)} Ergebnis.`;
+    : row.sources.length
+      ? row.sources.slice(0, 2).join(" ")
+      : `Zur Kompetenz „${row.competencyLabel}“ zeigte sich ein ${ratingDescription(row.rating)} Ergebnis.`;
   const supportText = row.supports.length ? ` Hilfreich war: ${row.supports.slice(0, 2).join("; ")}.` : "";
   const contextText = row.contexts.length ? ` Beobachtet wurde dies: ${row.contexts.slice(0, 2).join("; ")}.` : "";
   return {
@@ -171,7 +159,7 @@ export function buildTransferText(state, profile) {
       `Ist-Stand: ${report.stand}`,
       `Nächstes Ziel: ${report.goal}`,
       `Maßnahmen und Evaluation: ${report.measures}`,
-      `Belege aus: ${row.sources.slice(0, 4).join("; ")}`,
+      `Dokumentiert mit: ${row.sources.slice(0, 4).join("; ")}`,
       ""
     ];
   });

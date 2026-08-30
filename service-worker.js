@@ -1,4 +1,4 @@
-const CACHE_NAME = "screening-kompass-v5";
+const CACHE_NAME = "screening-kompass-v6";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -6,6 +6,7 @@ const APP_SHELL = [
   "./manifest.webmanifest",
   "./assets/icon.svg",
   "./src/app.js",
+  "./src/assessment.js",
   "./src/data.js",
   "./src/competencies.js",
   "./src/competency-links.js",

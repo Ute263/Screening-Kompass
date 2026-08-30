@@ -1385,3 +1385,162 @@ p {
   }
   body[data-view="printmaterials"] .print-sheet-page:last-child { break-after: auto; page-break-after: auto; }
 }
+
+/* Automatische pädagogische Einordnung */
+.page-heading-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.field select {
+  width: 100%;
+  min-height: 43px;
+  padding: 9px 34px 9px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--ink);
+  background: #fff;
+  font: inherit;
+}
+
+.field select:hover { border-color: #9db3ca; }
+
+.auto-scoring-note {
+  display: block;
+  margin-top: 7px;
+  color: #60758d;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.auto-code,
+.rating-badge {
+  display: inline-grid;
+  min-width: 40px;
+  height: 34px;
+  padding: 0 8px;
+  place-items: center;
+  justify-self: start;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: #526278;
+  background: #fff;
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.auto-code.is-open { min-width: 54px; color: #7c8999; background: #f6f8fa; font-size: 0.68rem; }
+.auto-code.code-plusplus,
+.auto-code.code-plus,
+.rating-badge.rating-plus { border-color: #9dcdb2; color: var(--green); background: var(--green-soft); }
+.auto-code.code-o,
+.rating-badge.rating-o { border-color: #decf95; color: #685817; background: #fff9df; }
+.auto-code.code--,
+.rating-badge.rating-- { border-color: #e3b3b7; color: var(--red); background: #fff4f4; }
+.auto-code.code-nb,
+.rating-badge.rating-nb { color: #69788a; background: #f2f5f8; }
+
+.task-documentation {
+  margin-bottom: 15px;
+  padding: 13px 14px;
+  border: 1px solid #cfe0f1;
+  border-left: 4px solid var(--teal);
+  border-radius: 9px;
+  background: #fff;
+}
+
+.task-documentation > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #64778d;
+  font-size: 0.67rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.task-documentation p {
+  margin: 0;
+  color: #31465f;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.scoring-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px 14px;
+  align-items: end;
+}
+
+.score-input {
+  display: grid;
+  grid-template-columns: minmax(70px, 110px) auto;
+  gap: 9px;
+  align-items: center;
+}
+
+.score-input b {
+  color: #5f7187;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.assessment-check {
+  display: inline-flex;
+  min-height: 43px;
+  align-items: center;
+  gap: 9px;
+  color: #42566e;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.assessment-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--blue);
+}
+
+.automatic-result {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 10px;
+  align-items: center;
+  min-height: 54px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+}
+
+.automatic-result > span:first-child {
+  color: #33465f;
+  font-size: 0.75rem;
+  font-weight: 850;
+}
+
+.automatic-result small {
+  grid-column: 1 / -1;
+  color: #7c8999;
+  font-size: 0.66rem;
+}
+
+.competency-documentation {
+  color: #5d6d81;
+  font-size: 0.71rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 720px) {
+  .page-heading-actions { width: 100%; }
+  .page-heading-actions .button { width: 100%; }
+  .observation-row > .auto-code { grid-column: 2; margin-top: 7px; }
+  .scoring-grid { grid-template-columns: 1fr; }
+  .automatic-result { grid-template-columns: minmax(0, 1fr) auto; }
+  .competency-row > .competency-documentation { grid-column: 1 / 3; }
+}
