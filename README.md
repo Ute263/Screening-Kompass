@@ -18,23 +18,24 @@ Für diese Ein-Datei-Version ist keine Installation nötig. Die Daten werden nur
 4. Pro Beobachtung eine Hilfecodierung wählen und möglichst einen konkreten Beleg ergänzen.
 5. Unter **Kompetenzen** die Abdeckung aller 290 FörderKompass-Kompetenzen prüfen. Nicht geprüfte Kompetenzen bleiben `n. b.`.
 6. Vorschläge nur für die tatsächlich mit einer Aufgabe verknüpften Einzelkompetenzen fachlich prüfen oder eine gezielte Zusatzprüfung mit Beleg dokumentieren.
-7. Höchstens drei belegte Einzelkompetenzen als Förderprioritäten auswählen.
-8. Ist-Stand, nächstes Ziel, Maßnahmen und Evaluation bearbeiten und als PDF drucken oder in den FörderKompass übertragen.
+7. Bei Bedarf bis zu drei belegte Einzelkompetenzen für die spätere Arbeit im FörderKompass vormerken.
+8. Unter **Ergebnisse** alle überprüften Kompetenzen, Einordnungen und konkreten Belege drucken oder als PDF sichern.
 
 Die App enthält 45 einzeln auswählbare Aufgaben-, Material-, Lese- und Auswertungsseiten aus dem Screening-Baukasten. Zu den gewählten Modulen werden automatisch die passenden Seiten vorgeschlagen; Material- und Lösungsseiten können einzeln an- oder abgewählt werden.
 
 Die 153 Beobachtungsaspekte sind bewusst eng mit 170 der 290 Einzelkompetenzen verknüpft. Die übrigen Kompetenzen werden nicht künstlich aus ähnlichen Aufgaben abgeleitet, sondern bleiben sichtbar `n. b.` und können bei Bedarf gezielt geprüft werden.
 
-Eine spätere lokale Übergabe an den FörderKompass ist technisch vorbereitet, aber noch nicht in der Oberfläche aktiviert. Das versionierte Format nutzt dieselben Kompetenz-IDs und schreibt verbindlich vor, vorhandene Einträge nur nach Prüfung zu ergänzen und niemals automatisch zu überschreiben. Details stehen in `INTEGRATION-FOERDERKOMPASS.md`.
+Eine spätere lokale Übergabe an den FörderKompass ist technisch vorbereitet, aber noch nicht in der Oberfläche aktiviert. Der Screening-Kompass erstellt bewusst keinen eigenen Förderplan. Das versionierte Format nutzt dieselben Kompetenz-IDs und schreibt verbindlich vor, vorhandene Einträge nur nach Prüfung zu ergänzen und niemals automatisch zu überschreiben. Details stehen in `INTEGRATION-FOERDERKOMPASS.md`.
 
 ## Beobachtungscodes
 
-- `S`: selbstständig und sicher
-- `H`: nach kurzem Hinweis
-- `V`: nach Vormachen oder visuellem Modell
-- `G`: gemeinsam oder deutlich geführt
-- `N`: noch nicht gezeigt
+- `++`: selbstständig und sicher
+- `+`: nach kurzem Hinweis
+- `o`: nach Vormachen, visuellem Modell oder mit Unterstützung
+- `-`: trotz deutlicher Unterstützung noch nicht gezeigt
 - `?`: nicht beurteilbar
+
+Gespeicherte Fälle und Sicherungen mit den früheren Codes `S`, `H`, `V`, `G` und `N` werden beim Öffnen automatisch übernommen.
 
 Die App erzeugt keine Gesamtnote und keine Diagnose. Einordnungsvorschläge beruhen ausschließlich auf den dokumentierten Beobachtungen und Hilfebedingungen.
 

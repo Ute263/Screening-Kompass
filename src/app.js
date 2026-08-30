@@ -13,7 +13,7 @@ const navItems = [
   ["observe", "Beobachten"],
   ["competencies", "Kompetenzen"],
   ["evaluate", "Auswerten"],
-  ["plan", "Förderplan"]
+  ["results", "Ergebnisse"]
 ];
 
 let state = loadState();
@@ -107,13 +107,13 @@ function header() {
     : currentView === "competencies"
       ? ["evaluate", "Auswertung öffnen"]
     : currentView === "evaluate"
-      ? ["plan", "Förderplan vorbereiten"]
-      : currentView === "plan"
-        ? ["print", "Bericht drucken / PDF"]
+      ? ["results", "Ergebnisse drucken"]
+      : currentView === "results"
+        ? ["print", "Ergebnisse drucken / PDF"]
         : currentView === "material"
           ? ["observe", "Beobachtung starten"]
           : [currentView === "fall" ? "modules" : "material", currentView === "fall" ? "Module auswählen" : "Aufgaben auswählen"];
-  const navIcons = { fall: "folder", modules: "grid", material: "print", observe: "eye", competencies: "check", evaluate: "bars", plan: "doc" };
+  const navIcons = { fall: "folder", modules: "grid", material: "print", observe: "eye", competencies: "check", evaluate: "bars", results: "doc" };
   return `
     <header class="app-header no-print">
       <button class="brand" data-action="nav" data-view="fall" aria-label="Zur Fallübersicht">
@@ -579,7 +579,6 @@ function evaluateView() {
   const filtered = areaFilter === "all" ? profile : profile.filter((row) => row.areaId === areaFilter);
   let active = profile.find((row) => row.key === state.activeProfileKey) || profile.find((row) => row.rating === "-") || profile[0];
   if (active && state.activeProfileKey !== active.key) state.activeProfileKey = active.key;
-  const report = active ? reportForRow(state, active) : null;
   return `
     <main class="workspace evaluate-workspace">
       <aside class="area-rail no-print">
@@ -591,7 +590,7 @@ function evaluateView() {
         }).join("")}
       </aside>
       <section class="workspace-main">
-        <div class="workspace-title"><div><h1>Auswertung</h1><p>Belege auf Ebene einzelner FörderKompass-Kompetenzen prüfen und höchstens drei Prioritäten wählen.</p></div><span>${state.priorities.length} von 3 Prioritäten</span></div>
+        <div class="workspace-title"><div><h1>Auswertung</h1><p>Belege auf Ebene einzelner FörderKompass-Kompetenzen prüfen und bis zu drei Bereiche für die spätere Übertragung vormerken.</p></div><span>${state.priorities.length} von 3 vorgemerkt</span></div>
         <div class="profile-heading"><h2>Kompetenzprofil</h2><p>Die Einordnung gilt nur für die benannte Einzelkompetenz und kann fachlich geändert werden.</p></div>
         ${filtered.length ? `
           <div class="profile-table">
@@ -608,43 +607,43 @@ function evaluateView() {
           </div>
         ` : `<div class="empty-inline"><h2>Noch keine Auswertung möglich</h2><p>Trage zunächst mindestens einen Beobachtungscode ein.</p><button class="button button-primary" data-action="nav" data-view="observe">Zur Beobachtung</button></div>`}
       </section>
-      <aside class="inspector report-inspector no-print">
-        <div class="inspector-heading"><h2>Förderplan-Vorschlag</h2>${icon("info", 18)}</div>
-        ${active && report ? `
+      <aside class="inspector result-inspector no-print">
+        <div class="inspector-heading"><h2>Ergebnis im Detail</h2>${icon("info", 18)}</div>
+        ${active ? `
           <p class="active-profile-label">${active.areaLabel}<br /><small>${active.subareaLabel}</small><br /><strong>${active.competencyLabel}</strong></p>
-          <label class="field field-wide"><span>Ist-Stand</span><textarea rows="5" data-report-field="stand" data-profile="${active.key}">${escapeHtml(report.stand)}</textarea></label>
-          <label class="field field-wide"><span>Nächstes Ziel</span><textarea rows="5" data-report-field="goal" data-profile="${active.key}">${escapeHtml(report.goal)}</textarea></label>
-          <label class="field field-wide"><span>Maßnahmen und Evaluation</span><textarea rows="6" data-report-field="measures" data-profile="${active.key}">${escapeHtml(report.measures)}</textarea></label>
-          <div class="notice notice-yellow compact">${icon("info", 17)}<p>Keine Diagnose · Vorschlag fachlich prüfen</p></div>
-          <button class="button button-secondary button-block" data-action="toggle-priority" data-profile="${active.key}">${icon("star", 17)} ${active.isPriority ? "Priorität entfernen" : "Priorität übernehmen"}</button>
-          <button class="button button-primary button-block" data-action="nav" data-view="plan">${icon("doc", 17)} Bericht erstellen</button>
+          <div class="result-detail-card"><span>Einordnung</span><strong>${active.rating === "nb" ? "nicht beurteilbar" : active.rating}</strong></div>
+          <div class="result-detail-card"><span>Konkrete Belege</span><p>${escapeHtml(active.evidence.join(" · ") || "Noch kein konkreter Beleg notiert.")}</p></div>
+          <div class="result-detail-card"><span>Geprüft mit</span><p>${escapeHtml(active.sources.join(" · ") || "Keine Aufgabe zugeordnet.")}</p></div>
+          <button class="button button-secondary button-block" data-action="toggle-priority" data-profile="${active.key}">${icon("star", 17)} ${active.isPriority ? "Vormerkung entfernen" : "Für FörderKompass vormerken"}</button>
+          <button class="button button-primary button-block" data-action="nav" data-view="results">${icon("doc", 17)} Ergebnisse ansehen</button>
         ` : `<p class="muted">Wähle eine ausgewertete Beobachtung aus.</p>`}
       </aside>
       <footer class="workspace-footer no-print">
         <button class="button button-secondary" data-action="nav" data-view="competencies">${icon("arrowLeft", 17)} Zur Kompetenzabdeckung</button>
         <span></span>
-        <button class="button button-primary" data-action="nav" data-view="plan">Förderplan vorbereiten ${icon("arrowRight", 17)}</button>
+        <button class="button button-primary" data-action="nav" data-view="results">Ergebnisse drucken ${icon("arrowRight", 17)}</button>
       </footer>
     </main>
   `;
 }
 
-function planView() {
+function resultsView() {
   const profile = buildProfile(state);
-  const priorities = state.priorities.map((key) => profile.find((row) => row.key === key)).filter(Boolean).slice(0, 3);
-  const transferText = buildTransferText(state, profile);
+  const observed = profile.filter((row) => row.rating !== "nb");
+  const marked = observed.filter((row) => row.isPriority);
+  const counts = APP_RATINGS.filter((rating) => rating.value !== "nb").map((rating) => ({ ...rating, count: observed.filter((row) => row.rating === rating.value).length }));
   return `
     <main class="report-page">
       <section class="report-toolbar no-print">
-        <div><h1>Förderplan vorbereiten</h1><p>Die bestätigten Prioritäten als Arbeitsgrundlage übertragen.</p></div>
+        <div><h1>Screening-Ergebnisse</h1><p>Beobachtungen, Einordnungen und konkrete Belege als PDF sichern oder ausdrucken.</p></div>
         <div class="toolbar-actions">
-          <button class="button button-secondary" data-action="copy-report">Bericht kopieren</button>
-          <button class="button button-primary" data-action="print">${icon("doc", 17)} Drucken / als PDF sichern</button>
+          <button class="button button-secondary" data-action="nav" data-view="evaluate">Zur Auswertung</button>
+          <button class="button button-primary" data-action="print">${icon("doc", 17)} Ergebnisse drucken / PDF</button>
         </div>
       </section>
       <article class="print-report">
         <header class="report-title">
-          <div><span>SCREENING-KOMPASS</span><h1>Übertragung zum FörderKompass</h1></div>
+          <div><span>SCREENING-KOMPASS</span><h1>Ergebnisübersicht</h1></div>
           <p>Pädagogische Arbeitsgrundlage · keine Diagnose</p>
         </header>
         <section class="report-meta">
@@ -653,25 +652,21 @@ function planView() {
           <p><span>Zeitraum</span><strong>${escapeHtml(state.caseData.period || "—")}</strong></p>
         </section>
         <section class="report-context"><h2>Fragestellung</h2><p>${escapeHtml(state.caseData.question || "Noch nicht eingetragen.")}</p><h2>Stärken und Gelingensbedingungen</h2><p>${escapeHtml(state.caseData.strengths || "Noch nicht eingetragen.")}</p></section>
-        ${priorities.length ? priorities.map((row, index) => {
-          const report = reportForRow(state, row);
-          return `<section class="priority-report">
-            <div class="priority-report-head"><span>Priorität ${index + 1}</span><h2>${row.areaLabel}</h2><p>${row.subareaLabel}<br /><strong>${row.competencyLabel}</strong> · Einordnung ${row.rating === "nb" ? "n. b." : row.rating}</p></div>
-            <div class="report-section"><h3>Ist-Stand</h3><p>${escapeHtml(report.stand)}</p></div>
-            <div class="report-section"><h3>Nächstes Ziel</h3><p>${escapeHtml(report.goal)}</p></div>
-            <div class="report-section"><h3>Maßnahmen und Evaluation</h3><p>${escapeHtml(report.measures)}</p></div>
-            <div class="report-sources"><strong>Belege:</strong> ${escapeHtml(row.sources.slice(0, 4).join("; "))}</div>
-          </section>`;
-        }).join("") : `<section class="empty-report"><h2>Noch keine Priorität ausgewählt</h2><p>Gehe zurück zur Auswertung und übernimm höchstens drei belegte Schwerpunkte.</p></section>`}
+        <section class="result-summary"><h2>Überblick</h2>${counts.map((entry) => `<p><strong>${entry.value}</strong><span>${entry.label}</span><b>${entry.count}</b></p>`).join("")}</section>
+        ${marked.length ? `<section class="marked-results"><h2>Für den FörderKompass vorgemerkt</h2><p>${marked.map((row) => escapeHtml(`${row.areaLabel}: ${row.competencyLabel}`)).join("<br />")}</p></section>` : ""}
+        ${observed.length ? observed.map((row) => `<section class="screening-result-row">
+          <div><span>${escapeHtml(row.areaLabel)}</span><small>${escapeHtml(row.subareaLabel)}</small><strong>${escapeHtml(row.competencyLabel)}</strong></div>
+          <b>${row.rating}</b>
+          <p><strong>Beleg:</strong> ${escapeHtml(row.evidence.join(" · ") || "Kein Freitextbeleg notiert.")}<br /><small>Aufgaben: ${escapeHtml(row.sources.join(" · ") || "—")}</small></p>
+        </section>`).join("") : `<section class="empty-report"><h2>Noch keine Ergebnisse</h2><p>Trage zunächst Beobachtungscodes ein.</p></section>`}
         <footer class="report-note">Die Zuordnung beruht auf pädagogischen Beobachtungen und dokumentierten Hilfebedingungen. Sie ersetzt keine standardisierte, medizinische oder sonderpädagogische Diagnostik.</footer>
       </article>
-      <section class="transfer-copy no-print"><h2>Textübertragung</h2><textarea readonly rows="14">${escapeHtml(transferText)}</textarea><div><button class="button button-secondary" data-action="copy-report">In Zwischenablage kopieren</button><button class="button button-quiet" data-action="export">${icon("download", 17)} Sicherung exportieren</button></div></section>
     </main>
   `;
 }
 
 function render() {
-  const views = { fall: fallView, modules: modulesView, material: materialView, printmaterials: printMaterialsView, observe: observeView, competencies: competenciesView, evaluate: evaluateView, plan: planView };
+  const views = { fall: fallView, modules: modulesView, material: materialView, printmaterials: printMaterialsView, observe: observeView, competencies: competenciesView, evaluate: evaluateView, results: resultsView };
   const content = (views[currentView] || fallView)();
   app.innerHTML = currentView === "printmaterials" ? content : `${header()}${content}`;
   document.body.dataset.view = currentView;
@@ -700,7 +695,7 @@ function togglePriority(key) {
     state.priorities = state.priorities.filter((entry) => entry !== key);
   } else {
     if (state.priorities.length >= 3) {
-      showToast("Es können höchstens drei Förderprioritäten ausgewählt werden.");
+      showToast("Es können höchstens drei Bereiche für den FörderKompass vorgemerkt werden.");
       return;
     }
     state.priorities = [...state.priorities, key];
