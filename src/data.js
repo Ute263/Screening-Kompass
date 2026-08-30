@@ -58,6 +58,8 @@ export const PRINT_SHEETS = [
   sheet(48, "V4", "Sozial-emotionale Beobachtung", "Aufgaben- und Beobachtungsbogen", ["V4"]),
   sheet(49, "V5", "Ereignisbogen bei Blockieren oder Aggression", "Zusatzbogen", ["V4"]),
   sheet(50, "V6", "Regulation in verschiedenen Situationen", "Aufgaben- und Beobachtungsbogen", ["V6"]),
+  sheet(75, "S1", "Aussprache, Stimme und Redefluss", "Aufgaben- und Beobachtungsbogen", ["S1"]),
+  sheet(76, "W6", "Taktil-kinästhetische Wahrnehmung", "Aufgaben- und Beobachtungsbogen", ["W6"]),
   sheet(63, "Z1", "Auswertungshilfe Deutsch", "Lösung und Auswertung", ["D1", "D2", "D3", "D4", "D5", "D9"], false),
   sheet(64, "Z2", "Auswertungshilfe Mathematik", "Lösung und Auswertung", ["M1", "M2", "M3", "M4", "M5"], false),
   sheet(66, "Material A", "Formkarten", "Ausschneidematerial", ["W2", "L1", "L2"]),
@@ -212,6 +214,20 @@ export const MODULES = [
     ]
   },
   {
+    id: "S1", group: "Basis & Kommunikation", title: "Aussprache, Stimme und Redefluss", description: "Verständlichkeit, Sprechweise und Wortfindung in kurzen Sprechanlässen",
+    items: [
+      item("1", "bildet ausgewählte Einzellaute nach einem klaren Sprachvorbild", [m("speech", "artikulation")]),
+      item("2", "spricht mehrsilbige Wörter ohne auffällige Laut- oder Silbenauslassungen nach", [m("speech", "artikulation")]),
+      item("3", "äußert sich in einer kurzen Bildbeschreibung verständlich", [m("speech", "artikulation")]),
+      item("4", "passt die Lautstärke an Gespräch und Raum an", [m("speech", "stimme")]),
+      item("5", "spricht in einem Tempo, bei dem die Äußerung verständlich bleibt", [m("speech", "stimme")]),
+      item("6", "nutzt beim Vorlesen oder Erzählen eine passende Betonung", [m("speech", "stimme")]),
+      item("7", "findet in vertrauten Sprechanlässen passende Wörter ohne lange Suchpausen", [m("speech", "redefluss")]),
+      item("8", "spricht einen kurzen Gedanken ohne häufige Pausen oder Satzabbrüche aus", [m("speech", "redefluss")]),
+      item("9", "ordnet Gedanken beim Sprechen für andere nachvollziehbar", [m("speech", "redefluss")])
+    ]
+  },
+  {
     id: "W1", group: "Wahrnehmung & Bewegung", title: "Visuelle Beobachtung im Schulalltag", description: "Orientierung, Suchen und visuelle Ermüdung",
     items: [
       item("1", "findet die richtige Stelle auf einer übersichtlichen Arbeitsseite", [m("perception", "raeumliche_beziehungen")]),
@@ -263,6 +279,17 @@ export const MODULES = [
       item("4", "kopiert einfache Formen", [m("perception", "visuomotorik"), m("motor", "graphomotorik")]),
       item("5", "schneidet an einer geraden oder gebogenen Linie", [m("motor", "feinmotorik"), m("perception", "visuomotorik")]),
       item("6", "stabilisiert das Blatt und führt den Stift mit angemessenem Druck", [m("motor", "graphomotorik"), m("motor", "feinmotorik")])
+    ]
+  },
+  {
+    id: "W6", group: "Wahrnehmung & Bewegung", title: "Taktil-kinästhetische Wahrnehmung", description: "Berührung, Tasten und Materialerfahrung – nur angekündigt und mit Zustimmung",
+    items: [
+      item("1", "nimmt eine angekündigte leichte Berührung wahr und lokalisiert sie am eigenen Körper", [m("perception", "taktil_kinaesthetisch")]),
+      item("2", "benennt eine Berührung als angenehm, unangenehm oder neutral", [m("perception", "taktil_kinaesthetisch")]),
+      item("3", "erkennt einen vertrauten Gegenstand ohne Sicht durch Tasten", [m("perception", "taktil_kinaesthetisch")]),
+      item("4", "unterscheidet zwei deutlich verschiedene Materialien durch Tasten", [m("perception", "taktil_kinaesthetisch")]),
+      item("5", "beschreibt einen Tastreiz mit passenden Begriffen", [m("perception", "taktil_kinaesthetisch")]),
+      item("6", "zeigt und benennt, welche Materialien oder Berührungen Unterstützung oder Abstand erfordern", [m("perception", "taktil_kinaesthetisch")])
     ]
   },
   {

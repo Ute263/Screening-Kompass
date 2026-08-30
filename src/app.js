@@ -1,5 +1,7 @@
 import { APP_RATINGS, AREAS, EVIDENCE_CODES, MODULE_GROUPS, MODULES, PRINT_SHEETS, areaById, moduleById, printSheetsForModules, profileKey, responseKey, subareaLabel } from "./data.js";
-import { buildProfile, buildTransferText, progressForArea, progressForModule, reportForRow } from "./report.js";
+import { COMPETENCIES, COMPETENCY_AREAS, COMPETENCY_BY_ID } from "./competencies.js";
+import { competencyIdsForObservation } from "./competency-links.js";
+import { buildCompetencyCoverage, buildProfile, buildTransferText, progressForArea, progressForModule, reportForRow } from "./report.js";
 import { createEmptyState, exportBackup, importBackup, loadState, resetState, saveState } from "./storage.js";
 
 const app = document.querySelector("#app");
@@ -9,6 +11,7 @@ const navItems = [
   ["modules", "Module"],
   ["material", "Aufgaben"],
   ["observe", "Beobachten"],
+  ["competencies", "Kompetenzen"],
   ["evaluate", "Auswerten"],
   ["plan", "Förderplan"]
 ];
@@ -16,6 +19,8 @@ const navItems = [
 let state = loadState();
 let currentView = state.caseData.label ? "observe" : "fall";
 let areaFilter = "all";
+let competencyAreaFilter = "all";
+let competencyScope = "all";
 
 function escapeHtml(value = "") {
   return String(value)
@@ -98,7 +103,9 @@ async function waitForPrintImages() {
 
 function header() {
   const primary = currentView === "observe"
-    ? ["evaluate", "Auswertung öffnen"]
+    ? ["competencies", "Kompetenzen prüfen"]
+    : currentView === "competencies"
+      ? ["evaluate", "Auswertung öffnen"]
     : currentView === "evaluate"
       ? ["plan", "Förderplan vorbereiten"]
       : currentView === "plan"
@@ -106,7 +113,7 @@ function header() {
         : currentView === "material"
           ? ["observe", "Beobachtung starten"]
           : [currentView === "fall" ? "modules" : "material", currentView === "fall" ? "Module auswählen" : "Aufgaben auswählen"];
-  const navIcons = { fall: "folder", modules: "grid", material: "print", observe: "eye", evaluate: "bars", plan: "doc" };
+  const navIcons = { fall: "folder", modules: "grid", material: "print", observe: "eye", competencies: "check", evaluate: "bars", plan: "doc" };
   return `
     <header class="app-header no-print">
       <button class="brand" data-action="nav" data-view="fall" aria-label="Zur Fallübersicht">
@@ -390,13 +397,13 @@ function observeView() {
   const activeKey = responseKey(currentModule.id, activeItem.id);
   const activeResponse = state.responses[activeKey] || {};
   const profile = buildProfile(state);
-  const activeMappings = activeItem.mappings.map((mapping) => ({
-    ...mapping,
-    key: profileKey(mapping.areaId, mapping.subareaId),
-    area: areaById(mapping.areaId)?.label || mapping.areaId,
-    subarea: subareaLabel(mapping.areaId, mapping.subareaId),
-    row: profile.find((entry) => entry.key === profileKey(mapping.areaId, mapping.subareaId))
-  }));
+  const activeCompetencies = competencyIdsForObservation(currentModule.id, activeItem.id)
+    .map((competencyId) => {
+      const competency = COMPETENCY_BY_ID.get(competencyId);
+      if (!competency) return null;
+      return { ...competency, row: profile.find((entry) => entry.key === competencyId) };
+    })
+    .filter(Boolean);
   const moduleProgress = progressForModule(state, currentModule);
   return `
     <main class="workspace observe-workspace">
@@ -434,15 +441,15 @@ function observeView() {
       <aside class="inspector no-print">
         <div class="inspector-heading"><h2>Zuordnung zum FörderKompass</h2>${icon("info", 18)}</div>
         <div class="notice notice-yellow compact">${icon("info", 17)}<p>Vorschlag – bitte fachlich prüfen</p></div>
-        ${activeMappings.map((mapping) => `
+        ${activeCompetencies.length ? activeCompetencies.map((competency) => `
           <section class="mapping-block">
-            <h3>${mapping.area}</h3>
-            <p>${mapping.subarea}</p>
-            <span class="mapping-result">${activeResponse.code ? `Beobachtungscode ${activeResponse.code} → ${mapping.row?.rating === "nb" ? "n. b." : mapping.row?.rating || "offen"}` : "Noch kein Beobachtungscode"}</span>
+            <h3>${competency.areaLabel}</h3>
+            <p><small>${competency.subareaLabel}</small><br /><strong>${competency.label}</strong></p>
+            <span class="mapping-result">${activeResponse.code ? `Beobachtungscode ${activeResponse.code} → ${competency.row?.rating === "nb" ? "n. b." : competency.row?.rating || "offen"}` : "Noch kein Beobachtungscode"}</span>
           </section>
-        `).join("")}
-        <button class="button button-secondary button-block" data-action="toggle-priority" data-profile="${activeMappings[0]?.key || ""}" ${!activeResponse.code ? "disabled" : ""}>
-          ${icon("star", 17)} ${activeMappings[0]?.row?.isPriority ? "Priorität entfernen" : "Als Priorität vormerken"}
+        `).join("") : `<div class="notice compact"><p>Diese Beobachtung liefert Kontext, bewertet aber bewusst keine einzelne FörderKompass-Kompetenz automatisch.</p></div>`}
+        <button class="button button-secondary button-block" data-action="toggle-priority" data-profile="${activeCompetencies[0]?.id || ""}" ${!activeResponse.code || !activeCompetencies.length ? "disabled" : ""}>
+          ${icon("star", 17)} ${activeCompetencies[0]?.row?.isPriority ? "Priorität entfernen" : "Als Priorität vormerken"}
         </button>
         <div class="code-legend">
           <h3>Beobachtungscode</h3>
@@ -464,6 +471,109 @@ function profileRatingSelect(row) {
   </select>`;
 }
 
+function selectedCompetencyIds() {
+  const ids = new Set();
+  for (const module of MODULES) {
+    if (!state.selectedModules.includes(module.id)) continue;
+    for (const observation of module.items) {
+      for (const competencyId of competencyIdsForObservation(module.id, observation.id)) ids.add(competencyId);
+    }
+  }
+  for (const [competencyId, rating] of Object.entries(state.manualCompetencyRatings || {})) {
+    if (rating && rating !== "nb") ids.add(competencyId);
+  }
+  for (const [competencyId, evidence] of Object.entries(state.competencyEvidence || {})) {
+    if (evidence?.trim()) ids.add(competencyId);
+  }
+  return ids;
+}
+
+function coverageStatus(checked, total) {
+  if (!checked) return { label: "nicht überprüft", className: "coverage-none" };
+  if (checked >= total) return { label: "überprüft", className: "coverage-complete" };
+  return { label: "teilweise überprüft", className: "coverage-partial" };
+}
+
+function competencyRatingSelect(row) {
+  return `<select class="rating-select rating-${row.rating.replace("+", "plus")}" data-competency-rating="${row.competencyId}" aria-label="Einordnung für ${escapeHtml(row.competencyLabel)}">
+    ${APP_RATINGS.map((rating) => `<option value="${rating.value}" ${row.rating === rating.value ? "selected" : ""}>${rating.value === "nb" ? "n. b." : rating.value}</option>`).join("")}
+  </select>`;
+}
+
+function competenciesView() {
+  const coverage = buildCompetencyCoverage(state);
+  const byId = new Map(coverage.map((row) => [row.competencyId, row]));
+  const relevantIds = selectedCompetencyIds();
+  const checked = coverage.filter((row) => row.rating !== "nb").length;
+  const fromScreening = coverage.filter((row) => row.fromScreening).length;
+  const visibleAreas = competencyAreaFilter === "all"
+    ? COMPETENCY_AREAS
+    : COMPETENCY_AREAS.filter((area) => area.id === competencyAreaFilter);
+
+  return `
+    <main class="simple-page competency-page">
+      <section class="page-heading">
+        <div><h1>Kompetenzabdeckung</h1><p>Alle 290 Einzelkompetenzen des FörderKompass bleiben sichtbar. Nur belegte Kompetenzen erhalten eine Einordnung.</p></div>
+        <button class="button button-primary" data-action="nav" data-view="evaluate">Auswertung öffnen ${icon("arrowRight", 17)}</button>
+      </section>
+      <section class="competency-summary">
+        <div><strong>${COMPETENCIES.length}</strong><span>Kompetenzen insgesamt</span></div>
+        <div><strong>${checked}</strong><span>überprüft</span></div>
+        <div><strong>${fromScreening}</strong><span>mit Screeningbeleg</span></div>
+        <div><strong>${COMPETENCIES.length - checked}</strong><span>nicht beurteilt</span></div>
+      </section>
+      <section class="competency-controls no-print">
+        <div class="scope-switch" role="group" aria-label="Umfang der Kompetenzliste">
+          <button class="${competencyScope === "selected" ? "is-active" : ""}" data-action="competency-scope" data-scope="selected">Passend zu gewählten Modulen</button>
+          <button class="${competencyScope === "all" ? "is-active" : ""}" data-action="competency-scope" data-scope="all">Alle 290 anzeigen</button>
+        </div>
+        <div class="area-chip-row">
+          <button class="area-chip ${competencyAreaFilter === "all" ? "is-active" : ""}" data-action="competency-area" data-area="all">Alle Bereiche</button>
+          ${COMPETENCY_AREAS.map((area) => `<button class="area-chip ${competencyAreaFilter === area.id ? "is-active" : ""}" data-action="competency-area" data-area="${area.id}">${area.label}</button>`).join("")}
+        </div>
+      </section>
+      <div class="notice notice-yellow competency-note">${icon("info", 18)}<p><strong>Wichtig:</strong> „n. b.“ bedeutet nicht, dass die Kompetenz fehlt, sondern nur, dass sie mit den bisherigen Aufgaben noch nicht ausreichend überprüft wurde. Eine gezielte Prüfung kann rechts in der Zeile mit Beleg dokumentiert werden.</p></div>
+      <div class="competency-area-list">
+        ${visibleAreas.map((area) => {
+          const areaRows = coverage.filter((row) => row.areaId === area.id);
+          const areaChecked = areaRows.filter((row) => row.rating !== "nb").length;
+          const status = coverageStatus(areaChecked, areaRows.length);
+          const visibleSubareas = area.subareas.filter((subarea) => competencyScope === "all" || subarea.competencies.some((competency) => relevantIds.has(competency.id)));
+          if (!visibleSubareas.length) return "";
+          return `<section class="competency-area-card">
+            <header><div><h2>${area.label}</h2><p>${areaChecked} von ${areaRows.length} Kompetenzen überprüft</p></div><span class="coverage-chip ${status.className}">${status.label}</span></header>
+            <div class="competency-subareas">
+              ${visibleSubareas.map((subarea) => {
+                const rows = subarea.competencies.map((competency) => byId.get(competency.id));
+                const subChecked = rows.filter((row) => row.rating !== "nb").length;
+                const subStatus = coverageStatus(subChecked, rows.length);
+                const visibleRows = competencyScope === "all" ? rows : rows.filter((row) => relevantIds.has(row.competencyId));
+                return `<details class="competency-subarea" ${subChecked ? "open" : ""}>
+                  <summary><span><strong>${subarea.label}</strong><small>${subChecked} von ${rows.length}</small></span><span class="coverage-chip ${subStatus.className}">${subStatus.label}</span></summary>
+                  <div class="competency-table">
+                    <div class="competency-table-head"><span>Einzelkompetenz</span><span>Quelle</span><span>Einordnung</span><span>Beleg / gezielte Prüfung</span><span>Priorität</span></div>
+                    ${visibleRows.map((row) => `<div class="competency-row">
+                      <strong>${escapeHtml(row.competencyLabel)}</strong>
+                      <span>${row.fromScreening ? `<span class="source-chip">Screening</span>` : `<span class="source-chip is-open">offen</span>`}</span>
+                      <span>${competencyRatingSelect(row)}</span>
+                      <input data-competency-evidence="${row.competencyId}" value="${escapeHtml(state.competencyEvidence?.[row.competencyId] || "")}" placeholder="konkreter Beleg oder Aufgabe" />
+                      <button class="priority-button ${row.isPriority ? "is-active" : ""}" data-action="toggle-priority" data-profile="${row.competencyId}" ${row.rating === "nb" ? "disabled" : ""} aria-label="Förderpriorität umschalten">${icon("star", 17)}</button>
+                    </div>`).join("")}
+                  </div>
+                </details>`;
+              }).join("")}
+            </div>
+          </section>`;
+        }).join("")}
+      </div>
+      <section class="material-bottom-actions no-print">
+        <button class="button button-secondary" data-action="nav" data-view="observe">${icon("arrowLeft", 17)} Zur Beobachtung</button>
+        <button class="button button-primary" data-action="nav" data-view="evaluate">Auswertung öffnen ${icon("arrowRight", 17)}</button>
+      </section>
+    </main>
+  `;
+}
+
 function evaluateView() {
   const profile = buildProfile(state);
   const filtered = areaFilter === "all" ? profile : profile.filter((row) => row.areaId === areaFilter);
@@ -474,22 +584,22 @@ function evaluateView() {
     <main class="workspace evaluate-workspace">
       <aside class="area-rail no-print">
         <div class="rail-heading"><strong>Förderbereiche</strong></div>
-        <button class="area-filter ${areaFilter === "all" ? "is-active" : ""}" data-action="filter-area" data-area="all"><span>Alle Beobachtungen</span><strong>${profile.length}</strong></button>
+        <button class="area-filter ${areaFilter === "all" ? "is-active" : ""}" data-action="filter-area" data-area="all"><span>Alle Kompetenzen</span><strong>${profile.length}</strong></button>
         ${AREAS.map((area) => {
           const counts = progressForArea(profile, area.id);
           return `<button class="area-filter ${areaFilter === area.id ? "is-active" : ""}" data-action="filter-area" data-area="${area.id}"><span>${area.label}</span><strong>${counts.observed}</strong>${icon("chevron", 14)}</button>`;
         }).join("")}
       </aside>
       <section class="workspace-main">
-        <div class="workspace-title"><div><h1>Auswertung</h1><p>Beobachtungen zusammenführen, Belege prüfen und höchstens drei Prioritäten wählen.</p></div><span>${state.priorities.length} von 3 Prioritäten</span></div>
-        <div class="profile-heading"><h2>Beobachtungsprofil</h2><p>Die Einordnung ist ein Vorschlag aus den dokumentierten Hilfebedingungen und kann geändert werden.</p></div>
+        <div class="workspace-title"><div><h1>Auswertung</h1><p>Belege auf Ebene einzelner FörderKompass-Kompetenzen prüfen und höchstens drei Prioritäten wählen.</p></div><span>${state.priorities.length} von 3 Prioritäten</span></div>
+        <div class="profile-heading"><h2>Kompetenzprofil</h2><p>Die Einordnung gilt nur für die benannte Einzelkompetenz und kann fachlich geändert werden.</p></div>
         ${filtered.length ? `
           <div class="profile-table">
-            <div class="profile-head"><span>Förderbereich</span><span>Unterbereich</span><span>Ergebnis</span><span>Konkreter Beleg</span><span>Priorität</span></div>
+            <div class="profile-head"><span>Förderbereich</span><span>Unterbereich / Kompetenz</span><span>Ergebnis</span><span>Konkreter Beleg</span><span>Priorität</span></div>
             ${filtered.map((row) => `
               <div class="profile-row ${active?.key === row.key ? "is-active" : ""}" data-action="select-profile" data-profile="${row.key}">
                 <span>${row.areaLabel}</span>
-                <strong>${row.subareaLabel}</strong>
+                <strong><small>${row.subareaLabel}</small>${row.competencyLabel}</strong>
                 <span>${profileRatingSelect(row)}</span>
                 <span class="evidence-summary">${escapeHtml(row.evidence[0] || row.sources[0] || "Noch kein konkreter Beleg notiert.")}</span>
                 <button class="priority-button ${row.isPriority ? "is-active" : ""}" data-action="toggle-priority" data-profile="${row.key}" aria-label="Priorität umschalten">${icon("star", 17)}</button>
@@ -501,7 +611,7 @@ function evaluateView() {
       <aside class="inspector report-inspector no-print">
         <div class="inspector-heading"><h2>Förderplan-Vorschlag</h2>${icon("info", 18)}</div>
         ${active && report ? `
-          <p class="active-profile-label">${active.areaLabel}<br /><strong>${active.subareaLabel}</strong></p>
+          <p class="active-profile-label">${active.areaLabel}<br /><small>${active.subareaLabel}</small><br /><strong>${active.competencyLabel}</strong></p>
           <label class="field field-wide"><span>Ist-Stand</span><textarea rows="5" data-report-field="stand" data-profile="${active.key}">${escapeHtml(report.stand)}</textarea></label>
           <label class="field field-wide"><span>Nächstes Ziel</span><textarea rows="5" data-report-field="goal" data-profile="${active.key}">${escapeHtml(report.goal)}</textarea></label>
           <label class="field field-wide"><span>Maßnahmen und Evaluation</span><textarea rows="6" data-report-field="measures" data-profile="${active.key}">${escapeHtml(report.measures)}</textarea></label>
@@ -511,7 +621,7 @@ function evaluateView() {
         ` : `<p class="muted">Wähle eine ausgewertete Beobachtung aus.</p>`}
       </aside>
       <footer class="workspace-footer no-print">
-        <button class="button button-secondary" data-action="nav" data-view="observe">${icon("arrowLeft", 17)} Zurück zur Beobachtung</button>
+        <button class="button button-secondary" data-action="nav" data-view="competencies">${icon("arrowLeft", 17)} Zur Kompetenzabdeckung</button>
         <span></span>
         <button class="button button-primary" data-action="nav" data-view="plan">Förderplan vorbereiten ${icon("arrowRight", 17)}</button>
       </footer>
@@ -546,7 +656,7 @@ function planView() {
         ${priorities.length ? priorities.map((row, index) => {
           const report = reportForRow(state, row);
           return `<section class="priority-report">
-            <div class="priority-report-head"><span>Priorität ${index + 1}</span><h2>${row.areaLabel}</h2><p>${row.subareaLabel} · Einordnung ${row.rating === "nb" ? "n. b." : row.rating}</p></div>
+            <div class="priority-report-head"><span>Priorität ${index + 1}</span><h2>${row.areaLabel}</h2><p>${row.subareaLabel}<br /><strong>${row.competencyLabel}</strong> · Einordnung ${row.rating === "nb" ? "n. b." : row.rating}</p></div>
             <div class="report-section"><h3>Ist-Stand</h3><p>${escapeHtml(report.stand)}</p></div>
             <div class="report-section"><h3>Nächstes Ziel</h3><p>${escapeHtml(report.goal)}</p></div>
             <div class="report-section"><h3>Maßnahmen und Evaluation</h3><p>${escapeHtml(report.measures)}</p></div>
@@ -561,7 +671,7 @@ function planView() {
 }
 
 function render() {
-  const views = { fall: fallView, modules: modulesView, material: materialView, printmaterials: printMaterialsView, observe: observeView, evaluate: evaluateView, plan: planView };
+  const views = { fall: fallView, modules: modulesView, material: materialView, printmaterials: printMaterialsView, observe: observeView, competencies: competenciesView, evaluate: evaluateView, plan: planView };
   const content = (views[currentView] || fallView)();
   app.innerHTML = currentView === "printmaterials" ? content : `${header()}${content}`;
   document.body.dataset.view = currentView;
@@ -637,6 +747,14 @@ app.addEventListener("click", async (event) => {
     areaFilter = target.dataset.area;
     render();
   }
+  if (action === "competency-area") {
+    competencyAreaFilter = target.dataset.area;
+    render();
+  }
+  if (action === "competency-scope") {
+    competencyScope = target.dataset.scope;
+    render();
+  }
   if (action === "select-recommended-sheets") {
     state.selectedPrintSheets = printSheetsForModules(state.selectedModules).filter((entry) => entry.recommended).map((entry) => entry.id);
     state.printSelectionInitialized = true;
@@ -708,6 +826,11 @@ app.addEventListener("input", (event) => {
     state.reportEdits[key] = { ...(state.reportEdits[key] || {}), [reportField]: event.target.value };
     persist();
   }
+  const competencyEvidence = event.target.dataset.competencyEvidence;
+  if (competencyEvidence) {
+    state.competencyEvidence[competencyEvidence] = event.target.value;
+    persist();
+  }
 });
 
 app.addEventListener("change", async (event) => {
@@ -739,8 +862,15 @@ app.addEventListener("change", async (event) => {
   }
   const profileRating = event.target.dataset.profileRating;
   if (profileRating) {
-    state.manualRatings[profileRating] = event.target.value;
+    state.manualCompetencyRatings[profileRating] = event.target.value;
     state.activeProfileKey = profileRating;
+    persist({ rerender: true });
+  }
+  const competencyRating = event.target.dataset.competencyRating;
+  if (competencyRating) {
+    state.manualCompetencyRatings[competencyRating] = event.target.value;
+    state.activeProfileKey = competencyRating;
+    if (event.target.value === "nb") state.priorities = state.priorities.filter((key) => key !== competencyRating);
     persist({ rerender: true });
   }
   if (event.target.id === "backup-import" && event.target.files?.[0]) {

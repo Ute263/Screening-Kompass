@@ -16,6 +16,8 @@ export function createEmptyState() {
     selectedModules: ["V2", "V3", "D2", "M2"],
     responses: {},
     manualRatings: {},
+    manualCompetencyRatings: {},
+    competencyEvidence: {},
     priorities: [],
     reportEdits: {},
     selectedPrintSheets: [],
@@ -32,7 +34,12 @@ export function loadState() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return memoryState || createEmptyState();
     const parsed = JSON.parse(raw);
-    return { ...createEmptyState(), ...parsed, caseData: { ...createEmptyState().caseData, ...(parsed.caseData || {}) } };
+    return {
+      ...createEmptyState(),
+      ...parsed,
+      caseData: { ...createEmptyState().caseData, ...(parsed.caseData || {}) },
+      priorities: (parsed.priorities || []).filter((key) => !String(key).includes("|"))
+    };
   } catch {
     return memoryState || createEmptyState();
   }
@@ -74,6 +81,11 @@ export async function importBackup(file) {
   if (!data || data.schemaVersion !== 1 || typeof data.responses !== "object") {
     throw new Error("Die Sicherungsdatei gehört nicht zu dieser App-Version.");
   }
-  const next = { ...createEmptyState(), ...data, caseData: { ...createEmptyState().caseData, ...(data.caseData || {}) } };
+  const next = {
+    ...createEmptyState(),
+    ...data,
+    caseData: { ...createEmptyState().caseData, ...(data.caseData || {}) },
+    priorities: (data.priorities || []).filter((key) => !String(key).includes("|"))
+  };
   return saveState(next);
 }

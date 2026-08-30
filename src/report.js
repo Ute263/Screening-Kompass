@@ -1,4 +1,6 @@
-import { APP_RATINGS, AREAS, EVIDENCE_CODES, MODULES, REPORT_TEMPLATES, areaById, profileKey, responseKey, subareaLabel } from "./data.js";
+import { APP_RATINGS, AREAS, EVIDENCE_CODES, MODULES, REPORT_TEMPLATES, profileKey, responseKey } from "./data.js";
+import { COMPETENCIES, COMPETENCY_BY_ID } from "./competencies.js";
+import { competencyIdsForObservation } from "./competency-links.js";
 
 const codeMap = new Map(EVIDENCE_CODES.map((code) => [code.value, code]));
 
@@ -23,12 +25,17 @@ export function buildProfile(state) {
     for (const observation of module.items) {
       const response = state.responses[responseKey(module.id, observation.id)];
       if (!response?.code) continue;
-      for (const mapping of observation.mappings) {
-        const key = profileKey(mapping.areaId, mapping.subareaId);
-        const existing = groups.get(key) || {
-          key,
-          areaId: mapping.areaId,
-          subareaId: mapping.subareaId,
+      for (const competencyId of competencyIdsForObservation(module.id, observation.id)) {
+        const competency = COMPETENCY_BY_ID.get(competencyId);
+        if (!competency) continue;
+        const existing = groups.get(competencyId) || {
+          key: competencyId,
+          competencyId,
+          competencyLabel: competency.label,
+          areaId: competency.areaId,
+          areaLabel: competency.areaLabel,
+          subareaId: competency.subareaId,
+          subareaLabel: competency.subareaLabel,
           codes: [],
           evidence: [],
           supports: [],
@@ -40,32 +47,65 @@ export function buildProfile(state) {
         if (response.support) existing.supports.push(response.support);
         if (response.context) existing.contexts.push(response.context);
         existing.sources.push(`${module.id} · ${observation.text}`);
-        groups.set(key, existing);
+        groups.set(competencyId, existing);
       }
     }
+  }
+
+  for (const competency of COMPETENCIES) {
+    const manualRating = state.manualCompetencyRatings?.[competency.id];
+    const manualEvidence = state.competencyEvidence?.[competency.id];
+    if ((!manualRating || manualRating === "nb") && !manualEvidence) continue;
+    const existing = groups.get(competency.id) || {
+      key: competency.id,
+      competencyId: competency.id,
+      competencyLabel: competency.label,
+      areaId: competency.areaId,
+      areaLabel: competency.areaLabel,
+      subareaId: competency.subareaId,
+      subareaLabel: competency.subareaLabel,
+      codes: [], evidence: [], supports: [], contexts: [], sources: []
+    };
+    if (manualEvidence) existing.evidence.push(manualEvidence);
+    if (manualRating && manualRating !== "nb") existing.sources.push("gezielte Kompetenzprüfung / fachliche Einordnung");
+    groups.set(competency.id, existing);
   }
 
   return [...groups.values()]
     .map((entry) => {
       const suggestion = suggestedRating(entry.codes);
-      const rating = state.manualRatings[entry.key] || suggestion;
+      const rating = state.manualCompetencyRatings?.[entry.key] || suggestion;
       return {
         ...entry,
-        areaLabel: areaById(entry.areaId)?.label || entry.areaId,
-        subareaLabel: subareaLabel(entry.areaId, entry.subareaId),
         suggestion,
         rating,
         evidence: unique(entry.evidence),
         supports: unique(entry.supports),
         contexts: unique(entry.contexts),
         sources: unique(entry.sources),
-        isPriority: state.priorities.includes(entry.key)
+        isPriority: state.priorities.includes(entry.key),
+        fromScreening: entry.codes.length > 0
       };
     })
     .sort((a, b) => {
       const areaOrder = AREAS.findIndex((area) => area.id === a.areaId) - AREAS.findIndex((area) => area.id === b.areaId);
-      return areaOrder || a.subareaLabel.localeCompare(b.subareaLabel, "de");
+      return areaOrder || a.subareaLabel.localeCompare(b.subareaLabel, "de") || a.competencyLabel.localeCompare(b.competencyLabel, "de");
     });
+}
+
+export function buildCompetencyCoverage(state) {
+  const profile = new Map(buildProfile(state).map((row) => [row.competencyId, row]));
+  return COMPETENCIES.map((competency) => profile.get(competency.id) || {
+    ...competency,
+    key: competency.id,
+    competencyId: competency.id,
+    competencyLabel: competency.label,
+    rating: "nb",
+    suggestion: "nb",
+    codes: [], evidence: [], supports: [], contexts: [], sources: [],
+    fromScreening: false,
+    isPriority: state.priorities.includes(competency.id)
+  });
 }
 
 export function progressForModule(state, module) {
@@ -79,14 +119,14 @@ export function progressForArea(profile, areaId) {
 }
 
 export function defaultReportFor(row) {
-  const template = REPORT_TEMPLATES[row.key] || {
-    goal: `Das Kind zeigt die nächste Kompetenz im Bereich „${row.subareaLabel}“ in vergleichbaren Situationen zunehmend selbstständig.`,
+  const template = REPORT_TEMPLATES[profileKey(row.areaId, row.subareaId)] || {
+    goal: `Das Kind zeigt die Kompetenz „${row.competencyLabel}“ in vergleichbaren Situationen zunehmend selbstständig.`,
     measures: "Die wirksame Hilfe aus dem Screening wird gezielt eingesetzt, dokumentiert und schrittweise reduziert.",
     evaluation: "Die Entwicklung wird nach sechs bis acht Wochen mit einer vergleichbaren Aufgabe unter dokumentierten Bedingungen überprüft."
   };
   const evidenceText = row.evidence.length
     ? row.evidence.slice(0, 3).join(" ")
-    : `Im Screening zeigte sich im Bereich „${row.subareaLabel}“ ein ${ratingDescription(row.rating)} Ergebnis.`;
+    : `Zur Kompetenz „${row.competencyLabel}“ zeigte sich ein ${ratingDescription(row.rating)} Ergebnis.`;
   const supportText = row.supports.length ? ` Hilfreich war: ${row.supports.slice(0, 2).join("; ")}.` : "";
   const contextText = row.contexts.length ? ` Beobachtet wurde dies: ${row.contexts.slice(0, 2).join("; ")}.` : "";
   return {
@@ -126,6 +166,7 @@ export function buildTransferText(state, profile) {
     const report = reportForRow(state, row);
     return [
       `${index + 1}. ${row.areaLabel} · ${row.subareaLabel}`,
+      `Kompetenz: ${row.competencyLabel}`,
       `App-Einordnung: ${row.rating === "nb" ? "n. b." : row.rating}`,
       `Ist-Stand: ${report.stand}`,
       `Nächstes Ziel: ${report.goal}`,
