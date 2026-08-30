@@ -657,7 +657,7 @@ function resultsView() {
         ${observed.length ? observed.map((row) => `<section class="screening-result-row">
           <div><span>${escapeHtml(row.areaLabel)}</span><small>${escapeHtml(row.subareaLabel)}</small><strong>${escapeHtml(row.competencyLabel)}</strong></div>
           <b>${row.rating}</b>
-          <p><strong>Beleg:</strong> ${escapeHtml(row.evidence.join(" · ") || "Kein Freitextbeleg notiert.")}<br /><small>Aufgaben: ${escapeHtml(row.sources.join(" · ") || "—")}</small></p>
+          <p><small>Aufgaben: ${escapeHtml(row.sources.join(" · ") || "—")}</small></p>
         </section>`).join("") : `<section class="empty-report"><h2>Noch keine Ergebnisse</h2><p>Trage zunächst Beobachtungscodes ein.</p></section>`}
         <footer class="report-note">Die Zuordnung beruht auf pädagogischen Beobachtungen und dokumentierten Hilfebedingungen. Sie ersetzt keine standardisierte, medizinische oder sonderpädagogische Diagnostik.</footer>
       </article>
