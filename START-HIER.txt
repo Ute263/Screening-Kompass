@@ -1,0 +1,14 @@
+SCREENING-KOMPASS DIREKT STARTEN
+
+1. Die ZIP-Datei vollständig herunterladen.
+2. Die ZIP-Datei im Ordner „Downloads“ doppelt anklicken und dadurch entpacken.
+3. Erst im entpackten Ordner die Datei „Screening-Kompass.html“ doppelt anklicken.
+
+Wichtig:
+Die HTML-Datei nicht innerhalb der ChatGPT-Dateivorschau öffnen. Diese Vorschau führt Web-Apps aus Sicherheitsgründen nicht aus.
+
+Die App benötigt keine Installation und keine Internetverbindung. Die Daten werden lokal im verwendeten Browser gespeichert. Für jeden Fall regelmäßig „Sicherung exportieren“ verwenden.
+
+Falls die Datei im falschen Programm geöffnet wird:
+Rechtsklick auf „Screening-Kompass.html“ → „Öffnen mit“ → Google Chrome oder Safari.
+

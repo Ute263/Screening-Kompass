@@ -1,0 +1,2873 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="description" content="Lokales Auswertungstool für den pädagogischen Screening-Baukasten Grundschule" />
+    <title>Screening-Kompass</title>
+    <style>:root {
+  color-scheme: light;
+  --navy: #0c2c55;
+  --blue: #075fc7;
+  --blue-dark: #064c9e;
+  --teal: #168494;
+  --teal-soft: #e8f7f7;
+  --ink: #17263b;
+  --muted: #66758b;
+  --line: #d9e2ec;
+  --line-strong: #c5d1df;
+  --surface: #ffffff;
+  --surface-soft: #f5f8fb;
+  --surface-blue: #eff7ff;
+  --yellow: #fff7d6;
+  --yellow-line: #ead99a;
+  --green: #177447;
+  --green-soft: #e9f7ef;
+  --red: #b63b45;
+  --shadow: 0 14px 36px rgba(26, 51, 82, 0.08);
+  --radius: 14px;
+  font-family: Inter, Aptos, "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: var(--surface-soft);
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  color: var(--ink);
+  background: var(--surface-soft);
+  -webkit-font-smoothing: antialiased;
+}
+
+.boot-screen {
+  display: grid;
+  min-height: 100vh;
+  padding: 32px;
+  place-items: center;
+  background: #f5f8fb;
+}
+
+.boot-screen > div {
+  width: min(100%, 620px);
+  padding: 38px;
+  border: 1px solid #d9e2ec;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 14px 36px rgba(26, 51, 82, 0.08);
+}
+
+.boot-screen span {
+  color: #168494;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.boot-screen h1 { margin-top: 8px; }
+.boot-screen p { margin-bottom: 0; color: #66758b; }
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+select {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(7, 95, 199, 0.25);
+  outline-offset: 2px;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 8px;
+  color: var(--navy);
+  font-size: clamp(1.65rem, 2.4vw, 2.25rem);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+h2 {
+  margin-bottom: 12px;
+  color: var(--navy);
+  font-size: 1.15rem;
+  line-height: 1.25;
+}
+
+h3 {
+  margin-bottom: 7px;
+  color: var(--navy);
+  font-size: 0.92rem;
+}
+
+p {
+  line-height: 1.55;
+}
+
+.icon {
+  flex: 0 0 auto;
+}
+
+.app-header {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
+  align-items: stretch;
+  min-height: 72px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 4px 18px rgba(22, 48, 79, 0.04);
+  backdrop-filter: blur(14px);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  padding: 0 24px;
+  border: 0;
+  color: var(--navy);
+  background: transparent;
+  font-size: 1.08rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.brand-mark {
+  display: flex;
+  align-items: end;
+  gap: 3px;
+  width: 27px;
+  height: 25px;
+  padding: 4px;
+  border-radius: 7px;
+  background: var(--navy);
+}
+
+.brand-mark span {
+  width: 5px;
+  border-radius: 3px 3px 1px 1px;
+  background: #fff;
+}
+
+.brand-mark span:nth-child(1) { height: 8px; }
+.brand-mark span:nth-child(2) { height: 15px; }
+.brand-mark span:nth-child(3) { height: 11px; background: #82e1dd; }
+
+.workflow-nav {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  min-width: 0;
+}
+
+.workflow-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 17px;
+  border: 0;
+  color: #5d6d82;
+  background: transparent;
+  font-size: 0.88rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.workflow-link::after {
+  position: absolute;
+  right: 14px;
+  bottom: -1px;
+  left: 14px;
+  height: 3px;
+  border-radius: 4px 4px 0 0;
+  background: transparent;
+  content: "";
+}
+
+.workflow-link:hover,
+.workflow-link.is-active {
+  color: var(--blue);
+  background: #f7fbff;
+}
+
+.workflow-link.is-active::after {
+  background: var(--blue);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 13px;
+  padding: 0 22px;
+}
+
+.save-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--green);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 9px 15px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font-size: 0.88rem;
+  font-weight: 750;
+  text-align: center;
+  text-decoration: none;
+  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+.button:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+.button-primary {
+  border-color: var(--blue);
+  color: #fff;
+  background: var(--blue);
+  box-shadow: 0 6px 15px rgba(7, 95, 199, 0.16);
+}
+
+.button-primary:hover { background: var(--blue-dark); }
+
+.button-secondary {
+  border-color: var(--line-strong);
+  color: var(--navy);
+  background: #fff;
+}
+
+.button-secondary:hover,
+.button-quiet:hover { background: var(--surface-blue); border-color: #a9c5e3; }
+
+.button-quiet {
+  border-color: transparent;
+  color: var(--blue);
+  background: transparent;
+}
+
+.button-block { width: 100%; }
+
+.icon-button {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--navy);
+  background: #fff;
+}
+
+.simple-page,
+.report-page {
+  width: min(100%, 1380px);
+  min-height: calc(100vh - 72px);
+  margin: 0 auto;
+  padding: 38px 34px 54px;
+}
+
+.page-heading,
+.report-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.page-heading p,
+.report-toolbar p,
+.workspace-title p,
+.profile-heading p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.case-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(285px, 0.72fr);
+  gap: 24px;
+}
+
+.form-surface,
+.guidance-panel,
+.module-group,
+.selection-summary,
+.transfer-copy {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.form-surface,
+.guidance-panel,
+.selection-summary {
+  padding: 26px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.field > span {
+  color: #33465f;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.field-wide { grid-column: 1 / -1; }
+
+.field input,
+.field textarea,
+.transfer-copy textarea,
+.rating-select {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--ink);
+  background: #fff;
+}
+
+.field input {
+  min-height: 43px;
+  padding: 9px 11px;
+}
+
+.field textarea,
+.transfer-copy textarea {
+  padding: 11px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.field input::placeholder,
+.field textarea::placeholder { color: #99a5b5; }
+
+.field input:hover,
+.field textarea:hover,
+.rating-select:hover { border-color: #9db3ca; }
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.guidance-panel {
+  align-self: start;
+}
+
+.plain-steps {
+  display: grid;
+  gap: 16px;
+  margin: 0 0 22px;
+  padding: 0;
+  list-style: none;
+}
+
+.plain-steps li {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 11px;
+  align-items: start;
+}
+
+.plain-steps li > span {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--teal);
+  font-size: 0.77rem;
+  font-weight: 800;
+}
+
+.plain-steps p { margin: 2px 0 0; color: #42546b; font-size: 0.9rem; }
+
+.notice {
+  display: flex;
+  gap: 10px;
+  padding: 15px;
+  border: 1px solid;
+  border-radius: 10px;
+}
+
+.notice p { margin: 0; font-size: 0.83rem; line-height: 1.5; }
+
+.notice-yellow {
+  border-color: var(--yellow-line);
+  color: #5c4f1a;
+  background: var(--yellow);
+}
+
+.notice.compact { padding: 10px 11px; }
+
+.data-actions {
+  display: grid;
+  gap: 3px;
+  margin-top: 17px;
+}
+
+.module-selection-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
+  align-items: start;
+}
+
+.module-groups { display: grid; gap: 18px; }
+
+.module-group { overflow: hidden; }
+
+.section-title-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 21px;
+  border-bottom: 1px solid var(--line);
+  background: #fbfcfe;
+}
+
+.section-title-line h2 { margin: 0; }
+
+.section-title-line span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.module-list { display: grid; }
+
+.module-choice {
+  display: grid;
+  grid-template-columns: 24px 42px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 70px;
+  padding: 13px 20px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.module-choice:last-child { border-bottom: 0; }
+.module-choice:hover { background: #f9fbfd; }
+.module-choice.is-selected { background: var(--surface-blue); }
+.module-choice input { position: absolute; opacity: 0; pointer-events: none; }
+
+.choice-check {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 6px;
+  color: #fff;
+  background: #fff;
+}
+
+.is-selected .choice-check { border-color: var(--blue); background: var(--blue); }
+
+.module-code {
+  display: grid;
+  width: 39px;
+  height: 30px;
+  place-items: center;
+  border-radius: 7px;
+  color: var(--navy);
+  background: #eaf2fa;
+  font-size: 0.77rem;
+  font-weight: 850;
+}
+
+.module-copy { display: grid; gap: 3px; }
+.module-copy strong { color: var(--navy); font-size: 0.92rem; }
+.module-copy small { color: var(--muted); font-size: 0.8rem; }
+.module-count { color: var(--muted); font-size: 0.75rem; white-space: nowrap; }
+
+.selection-summary {
+  position: sticky;
+  top: 96px;
+}
+
+.summary-number {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.summary-number strong { color: var(--blue); font-size: 1.65rem; }
+.summary-number span { color: var(--muted); font-size: 0.85rem; }
+.selection-summary > p { margin: 18px 0; color: var(--muted); font-size: 0.86rem; }
+
+.materials-page { width: min(100%, 1480px); }
+
+.material-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(150px, 0.6fr)) minmax(330px, 1.2fr);
+  gap: 1px;
+  margin-bottom: 22px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--line);
+  box-shadow: var(--shadow);
+}
+
+.material-summary > div {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  min-height: 68px;
+  padding: 16px 18px;
+  background: #fff;
+}
+
+.material-summary strong { color: var(--blue); font-size: 1.55rem; }
+.material-summary span { color: var(--muted); font-size: 0.78rem; }
+.material-summary .material-summary-actions { align-items: center; justify-content: flex-end; }
+
+.material-groups { display: grid; gap: 20px; }
+
+.material-group {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.print-sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  padding: 18px;
+}
+
+.print-sheet-choice {
+  position: relative;
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) 25px;
+  gap: 13px;
+  align-items: center;
+  min-height: 142px;
+  padding: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+}
+
+.print-sheet-choice:hover { border-color: #9ebbd8; box-shadow: 0 7px 18px rgba(26, 51, 82, 0.08); }
+.print-sheet-choice.is-selected { border-color: #7baddc; background: var(--surface-blue); box-shadow: inset 3px 0 var(--blue); }
+.print-sheet-choice > input { position: absolute; opacity: 0; pointer-events: none; }
+
+.sheet-preview {
+  display: block;
+  width: 92px;
+  aspect-ratio: 210 / 297;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(26, 51, 82, 0.08);
+}
+
+.sheet-preview img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.sheet-copy { display: grid; gap: 7px; min-width: 0; }
+.sheet-copy > strong { color: var(--navy); font-size: 0.88rem; line-height: 1.35; }
+.sheet-copy > small { color: var(--muted); font-size: 0.7rem; line-height: 1.35; }
+
+.sheet-meta { display: flex; align-items: center; gap: 8px; }
+.sheet-meta strong { padding: 4px 7px; border-radius: 6px; color: var(--blue); background: #e5f1fd; font-size: 0.69rem; }
+.sheet-meta small { color: var(--muted); font-size: 0.68rem; }
+.print-sheet-choice > .choice-check { align-self: start; margin-top: 2px; }
+
+.material-bottom-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.material-print-page { min-height: 100vh; padding: 28px; background: #edf1f5; }
+
+.print-material-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 22px;
+  width: min(100%, 940px);
+  margin: 0 auto 24px;
+  padding: 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.print-material-toolbar h1 { margin-bottom: 4px; font-size: 1.45rem; }
+.print-material-toolbar p { margin: 0; color: var(--muted); font-size: 0.82rem; }
+.print-material-toolbar > div:last-child { display: flex; gap: 10px; }
+
+.print-sheet-stack { display: grid; gap: 24px; justify-content: center; }
+
+.print-sheet-page {
+  width: min(100%, 794px);
+  aspect-ratio: 210 / 297;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(18, 43, 74, 0.16);
+}
+
+.print-sheet-page img { display: block; width: 100%; height: 100%; object-fit: contain; }
+
+.workspace {
+  display: grid;
+  grid-template-columns: 270px minmax(520px, 1fr) 330px;
+  grid-template-rows: minmax(0, 1fr) 72px;
+  min-height: calc(100vh - 72px);
+  background: #fff;
+}
+
+.module-rail,
+.area-rail {
+  grid-row: 1;
+  min-width: 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+  background: #f8fafc;
+}
+
+.rail-heading,
+.inspector-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 58px;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.rail-heading strong { color: var(--navy); font-size: 0.85rem; }
+
+.rail-group { padding: 14px 12px 4px; }
+
+.rail-group h3 {
+  margin: 0 7px 7px;
+  color: #768499;
+  font-size: 0.67rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.rail-module {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-height: 47px;
+  padding: 8px 8px;
+  border: 0;
+  border-radius: 8px;
+  color: #41536a;
+  background: transparent;
+  text-align: left;
+}
+
+.rail-module:hover { background: #eef3f8; }
+.rail-module.is-active { color: var(--blue); background: #eaf4ff; }
+.rail-module > span:first-child { font-size: 0.73rem; font-weight: 850; }
+.rail-module-title { overflow: hidden; font-size: 0.78rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+
+.rail-status {
+  display: inline-grid;
+  min-width: 27px;
+  height: 22px;
+  padding: 0 5px;
+  place-items: center;
+  border-radius: 11px;
+  color: #748297;
+  background: #e9eef4;
+  font-size: 0.64rem;
+  font-weight: 800;
+}
+
+.rail-status.is-complete { color: var(--green); background: var(--green-soft); }
+
+.workspace-main {
+  grid-row: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 26px 26px 32px;
+  background: #fff;
+}
+
+.workspace-title {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.workspace-title h1 { font-size: 1.6rem; }
+.workspace-title > span {
+  flex: 0 0 auto;
+  color: var(--teal);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.observation-table,
+.profile-table {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+}
+
+.observation-head,
+.observation-row {
+  display: grid;
+  grid-template-columns: 45px minmax(240px, 1fr) minmax(270px, 0.8fr);
+  align-items: center;
+}
+
+.observation-head {
+  min-height: 43px;
+  padding: 0 15px;
+  color: #68778b;
+  background: #f5f8fb;
+  font-size: 0.69rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.observation-row {
+  min-height: 62px;
+  padding: 10px 15px;
+  border-top: 1px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+}
+
+.observation-row:hover { background: #fbfdff; }
+.observation-row.is-active { background: var(--surface-blue); box-shadow: inset 3px 0 var(--blue); }
+.observation-number { color: #7b899b; font-size: 0.76rem; font-weight: 800; }
+.observation-row > strong { padding-right: 16px; color: #263850; font-size: 0.85rem; line-height: 1.4; }
+
+.evidence-control {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(34px, 1fr));
+  gap: 5px;
+}
+
+.evidence-button {
+  min-width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid #bfcbd9;
+  border-radius: 7px;
+  color: #526278;
+  background: #fff;
+  font-size: 0.75rem;
+  font-weight: 850;
+}
+
+.evidence-button:hover { border-color: var(--blue); color: var(--blue); background: #f4f9ff; }
+.evidence-button.is-selected { border-color: var(--blue); color: #fff; background: var(--blue); box-shadow: 0 3px 9px rgba(7, 95, 199, 0.18); }
+
+.observation-detail {
+  padding: 17px 18px 19px 61px;
+  border-top: 1px solid #cfe0f1;
+  border-bottom: 1px solid var(--line);
+  background: #f7fbff;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 13px;
+}
+
+.inspector {
+  grid-row: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 0 18px 24px;
+  border-left: 1px solid var(--line);
+  background: #fbfcfe;
+}
+
+.inspector-heading { margin: 0 -18px 16px; }
+.inspector-heading h2 { margin: 0; font-size: 0.97rem; }
+
+.mapping-block {
+  margin-top: 15px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+}
+
+.mapping-block h3 { margin-bottom: 5px; color: var(--blue); }
+.mapping-block p { margin-bottom: 9px; color: #364a63; font-size: 0.84rem; }
+.mapping-result { color: var(--muted); font-size: 0.72rem; font-weight: 700; }
+.inspector > .button { margin-top: 15px; }
+
+.code-legend {
+  margin-top: 22px;
+  padding-top: 17px;
+  border-top: 1px solid var(--line);
+}
+
+.code-legend p {
+  display: grid;
+  grid-template-columns: 25px 1fr;
+  gap: 8px;
+  margin: 7px 0;
+  color: var(--muted);
+  font-size: 0.73rem;
+}
+
+.code-legend p strong { color: var(--navy); }
+
+.workspace-footer {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: 270px minmax(300px, 1fr) 330px;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 22px;
+  border-top: 1px solid var(--line);
+  background: #fff;
+  box-shadow: 0 -6px 18px rgba(26, 51, 82, 0.05);
+}
+
+.workspace-footer > .button:last-child { justify-self: end; }
+
+.progress-track {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.progress-track > div {
+  width: min(100%, 360px);
+  height: 7px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #e8edf3;
+}
+
+.progress-track i { display: block; height: 100%; border-radius: inherit; background: var(--teal); }
+
+.area-rail { padding: 0 11px 20px; }
+.area-rail .rail-heading { margin: 0 -11px 8px; padding-left: 18px; }
+
+.area-filter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 14px;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-height: 47px;
+  padding: 8px 9px;
+  border: 0;
+  border-radius: 8px;
+  color: #485a70;
+  background: transparent;
+  text-align: left;
+}
+
+.area-filter:first-of-type { grid-template-columns: minmax(0, 1fr) auto; }
+.area-filter span { font-size: 0.78rem; font-weight: 700; line-height: 1.25; }
+.area-filter strong { display: grid; min-width: 24px; height: 22px; place-items: center; border-radius: 12px; color: #68798d; background: #e8edf3; font-size: 0.67rem; }
+.area-filter:hover { background: #eef3f8; }
+.area-filter.is-active { color: var(--blue); background: #eaf4ff; }
+.area-filter.is-active strong { color: #fff; background: var(--blue); }
+
+.profile-heading {
+  margin-bottom: 13px;
+  padding: 14px 16px;
+  border-left: 4px solid var(--teal);
+  background: var(--teal-soft);
+}
+
+.profile-heading h2 { margin-bottom: 3px; font-size: 0.98rem; }
+.profile-heading p { font-size: 0.78rem; }
+
+.profile-head,
+.profile-row {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.85fr) minmax(155px, 1fr) 72px minmax(190px, 1.3fr) 65px;
+  gap: 11px;
+  align-items: center;
+}
+
+.profile-head {
+  min-height: 43px;
+  padding: 0 13px;
+  color: #68778b;
+  background: #f5f8fb;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.profile-row {
+  min-height: 67px;
+  padding: 9px 13px;
+  border-top: 1px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+}
+
+.profile-row:hover { background: #fbfdff; }
+.profile-row.is-active { background: var(--surface-blue); box-shadow: inset 3px 0 var(--blue); }
+.profile-row > span:first-child { color: #4e5f75; font-size: 0.74rem; line-height: 1.3; }
+.profile-row > strong { color: var(--navy); font-size: 0.78rem; line-height: 1.3; }
+.evidence-summary { display: -webkit-box; overflow: hidden; color: #5d6d81; font-size: 0.72rem; line-height: 1.38; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+
+.rating-select {
+  height: 34px;
+  padding: 0 7px;
+  color: var(--navy);
+  font-weight: 850;
+}
+
+.rating-minus { border-color: #e3b3b7; color: var(--red); background: #fff4f4; }
+.rating-o { border-color: #decf95; color: #685817; background: #fff9df; }
+.rating-plus { border-color: #9dcdb2; color: var(--green); background: var(--green-soft); }
+
+.priority-button {
+  display: grid;
+  width: 37px;
+  height: 37px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: #8793a2;
+  background: #fff;
+}
+
+.priority-button:hover,
+.priority-button.is-active { border-color: #d9b833; color: #8c6e00; background: #fff4bd; }
+
+.report-inspector .field { margin-bottom: 13px; }
+.active-profile-label { margin-bottom: 17px; color: var(--muted); font-size: 0.8rem; }
+.active-profile-label strong { color: var(--navy); font-size: 0.9rem; }
+.muted { color: var(--muted); }
+
+.empty-state,
+.empty-inline {
+  display: grid;
+  min-height: 420px;
+  place-content: center;
+  justify-items: center;
+  padding: 36px;
+  text-align: center;
+}
+
+.empty-state { min-height: calc(100vh - 72px); }
+.empty-state p,
+.empty-inline p { color: var(--muted); }
+
+.report-page { width: min(100%, 1120px); }
+.toolbar-actions { display: flex; gap: 10px; }
+
+.print-report {
+  padding: 44px 50px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.report-title {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 22px;
+  border-bottom: 4px solid var(--navy);
+}
+
+.report-title span { color: var(--teal); font-size: 0.73rem; font-weight: 900; letter-spacing: 0.12em; }
+.report-title h1 { margin: 5px 0 0; font-size: 2rem; }
+.report-title > p { margin: 0; color: var(--muted); font-size: 0.76rem; }
+
+.report-meta {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 1px;
+  margin: 25px 0;
+  border: 1px solid var(--line);
+  background: var(--line);
+}
+
+.report-meta p { display: grid; gap: 5px; margin: 0; padding: 13px 15px; background: #fff; }
+.report-meta span { color: var(--muted); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+.report-meta strong { color: var(--navy); font-size: 0.9rem; }
+
+.report-context {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 7px 18px;
+  margin-bottom: 28px;
+  padding: 18px;
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+
+.report-context h2,
+.report-context p { margin: 0; }
+.report-context h2 { font-size: 0.86rem; }
+.report-context p { color: #43546a; font-size: 0.84rem; }
+
+.priority-report {
+  margin: 26px 0;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 11px;
+  break-inside: avoid;
+}
+
+.priority-report-head { padding: 16px 19px; color: #fff; background: var(--navy); }
+.priority-report-head span { color: #91dcd9; font-size: 0.69rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.priority-report-head h2 { margin: 4px 0 2px; color: #fff; font-size: 1.1rem; }
+.priority-report-head p { margin: 0; color: #d4dfeb; font-size: 0.78rem; }
+.report-section { display: grid; grid-template-columns: 155px 1fr; gap: 20px; padding: 16px 19px; border-bottom: 1px solid var(--line); }
+.report-section h3,
+.report-section p { margin: 0; }
+.report-section h3 { color: var(--teal); }
+.report-section p { color: #374a61; font-size: 0.84rem; }
+.report-sources { padding: 12px 19px; color: var(--muted); background: #f8fafc; font-size: 0.71rem; line-height: 1.5; }
+.report-note { margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.72rem; line-height: 1.5; }
+.empty-report { margin: 35px 0; padding: 28px; border: 1px dashed var(--line-strong); border-radius: 10px; text-align: center; }
+
+.transfer-copy { margin-top: 24px; padding: 24px; }
+.transfer-copy > div { display: flex; gap: 10px; margin-top: 12px; }
+
+.toast {
+  position: fixed;
+  z-index: 100;
+  right: 24px;
+  bottom: 24px;
+  max-width: 380px;
+  padding: 13px 17px;
+  border-radius: 9px;
+  color: #fff;
+  background: var(--navy);
+  box-shadow: 0 14px 34px rgba(12, 44, 85, 0.25);
+  font-size: 0.85rem;
+  font-weight: 700;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.toast.is-visible { opacity: 1; transform: translateY(0); }
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 1220px) {
+  .app-header { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .brand { padding: 0 16px; }
+  .brand > span:last-child { display: none; }
+  .workflow-link { padding: 0 12px; }
+  .save-status { display: none; }
+  .workspace { grid-template-columns: 225px minmax(440px, 1fr) 290px; }
+  .workspace-footer { grid-template-columns: 225px minmax(280px, 1fr) 290px; }
+  .observation-head,
+  .observation-row { grid-template-columns: 38px minmax(200px, 1fr) 244px; }
+  .evidence-control { grid-template-columns: repeat(6, 35px); }
+  .profile-head,
+  .profile-row { grid-template-columns: minmax(105px, 0.75fr) minmax(130px, 1fr) 65px minmax(150px, 1.1fr) 45px; gap: 8px; }
+  .print-sheet-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .material-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .material-summary .material-summary-actions { grid-column: 1 / -1; }
+}
+
+@media (max-width: 980px) {
+  .app-header { grid-template-columns: auto minmax(0, 1fr); }
+  .header-actions { display: none; }
+  .workflow-nav { justify-content: flex-end; overflow-x: auto; }
+  .workflow-link { min-width: 72px; padding: 0 10px; }
+  .workflow-link span { display: none; }
+  .case-layout,
+  .module-selection-layout { grid-template-columns: 1fr; }
+  .selection-summary { position: static; }
+  .workspace { grid-template-columns: 210px minmax(0, 1fr); grid-template-rows: auto auto 72px; }
+  .module-rail,
+  .area-rail { grid-column: 1; grid-row: 1 / 3; }
+  .workspace-main { grid-column: 2; grid-row: 1; }
+  .inspector { grid-column: 2; grid-row: 2; overflow: visible; border-top: 1px solid var(--line); border-left: 0; }
+  .workspace-footer { grid-column: 1 / -1; grid-row: 3; grid-template-columns: auto 1fr auto; }
+  .report-inspector { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; padding-top: 18px; }
+  .report-inspector .inspector-heading,
+  .report-inspector .active-profile-label,
+  .report-inspector .notice,
+  .report-inspector > .button { grid-column: 1 / -1; }
+  .report-inspector .inspector-heading { margin-top: -18px; }
+}
+
+@media (max-width: 720px) {
+  .app-header { min-height: 62px; }
+  .brand { padding: 0 12px; }
+  .workflow-link { min-width: 52px; }
+  .simple-page,
+  .report-page { min-height: calc(100vh - 62px); padding: 25px 16px 40px; }
+  .page-heading,
+  .report-toolbar { align-items: stretch; flex-direction: column; }
+  .page-heading > .button,
+  .report-toolbar .button { width: 100%; }
+  .form-surface,
+  .guidance-panel,
+  .selection-summary { padding: 20px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .field-wide { grid-column: auto; }
+  .module-choice { grid-template-columns: 24px 40px minmax(0, 1fr); padding: 13px 14px; }
+  .module-count { grid-column: 3; }
+  .workspace { display: block; min-height: calc(100vh - 62px); }
+  .module-rail,
+  .area-rail { max-height: 280px; overflow-y: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  .workspace-main { overflow: visible; padding: 22px 14px 110px; }
+  .inspector { overflow: visible; padding-bottom: 30px; }
+  .workspace-title { align-items: start; flex-direction: column; }
+  .observation-table { border-radius: 9px; }
+  .observation-head { display: none; }
+  .observation-row { grid-template-columns: 28px minmax(0, 1fr); gap: 6px; padding: 13px 11px; }
+  .observation-row > .evidence-control { grid-column: 2; margin-top: 8px; }
+  .evidence-control { grid-template-columns: repeat(6, minmax(32px, 1fr)); }
+  .observation-detail { padding: 16px; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .workspace-footer { position: fixed; z-index: 19; right: 0; bottom: 0; left: 0; display: flex; justify-content: space-between; padding: 10px; }
+  .workspace-footer .progress-track { display: none; }
+  .workspace-footer .button { padding: 9px 11px; font-size: 0.75rem; }
+  .profile-head { display: none; }
+  .profile-row { grid-template-columns: minmax(0, 1fr) 66px 42px; gap: 8px; padding: 13px; }
+  .profile-row > span:first-child,
+  .profile-row > strong { grid-column: 1; }
+  .profile-row > span:nth-child(3) { grid-column: 2; grid-row: 1 / 3; }
+  .profile-row .evidence-summary { grid-column: 1 / 3; }
+  .profile-row .priority-button { grid-column: 3; grid-row: 1 / 3; }
+  .report-inspector { display: block; }
+  .report-inspector .field { margin-bottom: 13px; }
+  .toolbar-actions { width: 100%; flex-direction: column; }
+  .print-report { padding: 27px 20px; }
+  .report-title { align-items: start; flex-direction: column; }
+  .report-title h1 { font-size: 1.6rem; }
+  .report-meta { grid-template-columns: 1fr; }
+  .report-context,
+  .report-section { grid-template-columns: 1fr; }
+  .transfer-copy > div { flex-direction: column; }
+  .toast { right: 14px; bottom: 82px; left: 14px; max-width: none; }
+  .material-summary { grid-template-columns: 1fr; }
+  .material-summary .material-summary-actions { grid-column: auto; align-items: stretch; flex-direction: column; }
+  .print-sheet-grid { grid-template-columns: 1fr; padding: 13px; }
+  .print-sheet-choice { grid-template-columns: 76px minmax(0, 1fr) 24px; min-height: 125px; }
+  .sheet-preview { width: 76px; }
+  .material-bottom-actions { align-items: stretch; flex-direction: column; }
+  .material-bottom-actions .button { width: 100%; }
+  .material-print-page { padding: 14px; }
+  .print-material-toolbar { align-items: stretch; flex-direction: column; }
+  .print-material-toolbar > div:last-child { flex-direction: column; }
+}
+
+@media print {
+  @page { size: A4; margin: 14mm 13mm 15mm; }
+  @page screeningSheet { size: A4; margin: 0; }
+  html,
+  body { background: #fff; }
+  .no-print,
+  .app-header,
+  .report-toolbar,
+  .transfer-copy,
+  .toast { display: none !important; }
+  .report-page { width: auto; min-height: 0; padding: 0; }
+  .print-report { padding: 0; border: 0; border-radius: 0; box-shadow: none; }
+  .report-title { padding-bottom: 14px; }
+  .report-title h1 { font-size: 20pt; }
+  .priority-report { margin: 18px 0; page-break-inside: avoid; }
+  .report-note { font-size: 8pt; }
+  body[data-view="printmaterials"] .material-print-page { min-height: 0; padding: 0; background: #fff; }
+  body[data-view="printmaterials"] .print-sheet-stack { display: block; }
+  body[data-view="printmaterials"] .print-sheet-page {
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    overflow: hidden;
+    page: screeningSheet;
+    break-after: page;
+    page-break-after: always;
+    box-shadow: none;
+  }
+  body[data-view="printmaterials"] .print-sheet-page:last-child { break-after: auto; page-break-after: auto; }
+}
+</style>
+  </head>
+  <body>
+    <div id="app">
+      <main class="boot-screen">
+        <div>
+          <span>SCREENING-KOMPASS</span>
+          <h1>Die App wird gestartet …</h1>
+          <p>Wenn diese Meldung stehen bleibt, wird die Datei nur in einer geschützten Vorschau angezeigt. Bitte die ZIP-Datei herunterladen, entpacken und die darin enthaltene Datei öffnen.</p>
+        </div>
+      </main>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script>
+      window.addEventListener("error", function (event) {
+        var target = document.getElementById("app");
+        if (!target) return;
+        target.innerHTML = '<main class="boot-screen"><div><span>SCREENING-KOMPASS</span><h1>Die App konnte nicht gestartet werden.</h1><p>Bitte verwende die entpackte ZIP-Datei oder die Netlify-Version. Technischer Hinweis: ' + String(event.message || "unbekannter Fehler").replace(/[<>]/g, "") + '</p></div></main>';
+      });
+    </script>
+    <script>const EVIDENCE_CODES = [
+  { value: "S", short: "S", label: "selbstständig und sicher", appRating: "+" },
+  { value: "H", short: "H", label: "nach kurzem Hinweis", appRating: "o" },
+  { value: "V", short: "V", label: "nach Vormachen oder visuellem Modell", appRating: "o" },
+  { value: "G", short: "G", label: "gemeinsam oder deutlich geführt", appRating: "-" },
+  { value: "N", short: "N", label: "noch nicht gezeigt", appRating: "-" },
+  { value: "?", short: "?", label: "nicht beurteilbar", appRating: "nb" }
+];
+
+const APP_RATINGS = [
+  { value: "+", label: "+", description: "gelingt sicher / kein aktueller Förderbedarf" },
+  { value: "o", label: "o", description: "gelingt teilweise / geringer oder situationsabhängiger Förderbedarf" },
+  { value: "-", label: "-", description: "gelingt noch unsicher / deutlicher Förderbedarf" },
+  { value: "nb", label: "n. b.", description: "nicht ausreichend beobachtet" }
+];
+
+const sheet = (page, code, title, kind, moduleIds, recommended = true) => ({
+  id: `pdf-${String(page).padStart(3, "0")}`,
+  page,
+  code,
+  title,
+  kind,
+  moduleIds,
+  recommended,
+  image: `./assets/sheets/page-${String(page).padStart(3, "0")}.png`
+});
+
+const PRINT_SHEETS = [
+  sheet(16, "B3", "Beobachtung im Schulvormittag", "Aufgaben- und Beobachtungsbogen", ["B3"]),
+  sheet(17, "B4", "Kommunikation und soziale Orientierung", "Aufgaben- und Beobachtungsbogen", ["B4"]),
+  sheet(21, "W1", "Visuelle Wahrnehmung im Schulalltag", "Aufgaben- und Beobachtungsbogen", ["W1"]),
+  sheet(22, "W2", "Visuelle Verarbeitung - kurze Aufgaben", "Aufgaben- und Beobachtungsbogen", ["W2"]),
+  sheet(23, "W3", "Auditive Verarbeitung", "Aufgaben- und Beobachtungsbogen", ["W3"]),
+  sheet(24, "W4", "Bewegung, Koordination und Körpermittellinie", "Aufgaben- und Beobachtungsbogen", ["W4"]),
+  sheet(25, "W5", "Fein- und Visuomotorik", "Aufgaben- und Beobachtungsbogen", ["W5"]),
+  sheet(26, "L1", "Denken und Lernen", "Aufgaben- und Beobachtungsbogen", ["L1"]),
+  sheet(27, "L2", "Kurz üben und erneut ausprobieren", "Aufgaben- und Beobachtungsbogen", ["L2"]),
+  sheet(28, "D1", "Laute, Silben und Buchstaben", "Aufgaben- und Beobachtungsbogen", ["D1"]),
+  sheet(29, "D2", "Lesen - Grundlagen", "Aufgaben- und Beobachtungsbogen", ["D2"]),
+  sheet(30, "D3", "Schreiben und Verschriften", "Aufgaben- und Beobachtungsbogen", ["D3"]),
+  sheet(31, "D4", "Sprachverstehen und Erzählen", "Aufgaben- und Beobachtungsbogen", ["D4"]),
+  sheet(32, "D5", "Deutsch: Lesen erweitert", "Aufgaben- und Beobachtungsbogen", ["D5"]),
+  sheet(33, "D6", "Lesematerial: Wörter und Pseudowörter", "Lesematerial", ["D2", "D5"]),
+  sheet(34, "D7", "Lesetext A: Der Schlüssel im Garten", "Lesematerial", ["D5"]),
+  sheet(35, "D8", "Lesetext B: Ein Plan für den Schulgarten", "Lesematerial", ["D5"]),
+  sheet(36, "D9", "Schreiben und Rechtschreibung erweitert", "Aufgaben- und Beobachtungsbogen", ["D9"]),
+  sheet(37, "D10", "Schreibprobe: eigener Text", "Arbeitsmaterial", ["D9"]),
+  sheet(38, "M1", "Mengen und Zählen", "Aufgaben- und Beobachtungsbogen", ["M1"]),
+  sheet(39, "M2", "Ziffern, Zahlenraum und Stellenwert", "Aufgaben- und Beobachtungsbogen", ["M2"]),
+  sheet(40, "M3", "Zerlegen und Rechnen", "Aufgaben- und Beobachtungsbogen", ["M3"]),
+  sheet(41, "M4", "Sachrechnen, Muster und Größen", "Aufgaben- und Beobachtungsbogen", ["M4"]),
+  sheet(42, "M5", "Mathematik: Zahlraum bis 100", "Aufgaben- und Beobachtungsbogen", ["M5"]),
+  sheet(43, "M6", "Mathematik: Rechnen bis 100", "Aufgaben- und Beobachtungsbogen", ["M5"]),
+  sheet(44, "M7", "Mathematik: weiterführende Anwendung", "Aufgaben- und Beobachtungsbogen", ["M5"]),
+  sheet(45, "V1", "Ausgangsbeobachtung über fünf Tage", "Aufgaben- und Beobachtungsbogen", ["V1"]),
+  sheet(46, "V2", "Lern- und Arbeitsverhalten", "Aufgaben- und Beobachtungsbogen", ["V2"]),
+  sheet(47, "V3", "Hilfe annehmen und Neues lernen", "Aufgaben- und Beobachtungsbogen", ["V3"]),
+  sheet(48, "V4", "Sozial-emotionale Beobachtung", "Aufgaben- und Beobachtungsbogen", ["V4"]),
+  sheet(49, "V5", "Ereignisbogen bei Blockieren oder Aggression", "Zusatzbogen", ["V4"]),
+  sheet(50, "V6", "Regulation in verschiedenen Situationen", "Aufgaben- und Beobachtungsbogen", ["V6"]),
+  sheet(63, "Z1", "Auswertungshilfe Deutsch", "Lösung und Auswertung", ["D1", "D2", "D3", "D4", "D5", "D9"], false),
+  sheet(64, "Z2", "Auswertungshilfe Mathematik", "Lösung und Auswertung", ["M1", "M2", "M3", "M4", "M5"], false),
+  sheet(66, "Material A", "Formkarten", "Ausschneidematerial", ["W2", "L1", "L2"]),
+  sheet(67, "Material B", "Mengenkarten", "Ausschneidematerial", ["M1", "M3"]),
+  sheet(68, "Material C", "Zahlenkarten", "Ausschneidematerial", ["M1", "M2", "M3"]),
+  sheet(69, "Material D", "Musterfolgen", "Ausschneidematerial", ["W2", "L1", "L2", "M4"]),
+  sheet(70, "Material E", "Buchstabenkarten", "Ausschneidematerial", ["D1"]),
+  sheet(71, "Material F", "Schreibprobe Grundlagen", "Arbeitsmaterial", ["W5", "D3"]),
+  sheet(72, "Material G", "Lesekarten Grundlagen", "Lesematerial", ["D1", "D2"]),
+  sheet(73, "Material H", "Lesesätze Grundlagen", "Lesematerial", ["D2"]),
+  sheet(74, "Material I", "Visuelles Suchblatt", "Arbeitsmaterial", ["W2"])
+];
+
+function printSheetsForModules(moduleIds) {
+  const selected = new Set(moduleIds);
+  return PRINT_SHEETS.filter((entry) => entry.moduleIds.some((moduleId) => selected.has(moduleId)));
+}
+
+const AREAS = [
+  {
+    id: "emotional",
+    label: "Emotionalität, Sozialverhalten",
+    subareas: [
+      ["selbstwahrnehmung", "Selbstwahrnehmung und Selbstsicherheit"],
+      ["selbstkontrolle", "Selbstkontrolle"],
+      ["frustration", "Frustrationstoleranz"],
+      ["kontakt", "Kontakt- und Konfliktverhalten"]
+    ]
+  },
+  {
+    id: "learning",
+    label: "Lern- und Leistungsverhalten",
+    subareas: [
+      ["orientierung", "Orientierung und Selbstständigkeit"],
+      ["aufgabenbeginn", "Aufgabenbeginn"],
+      ["ausdauer", "Konzentration und Ausdauer"],
+      ["organisation", "Arbeitsorganisation"],
+      ["mitarbeit", "Motivation und Mitarbeit"]
+    ]
+  },
+  {
+    id: "speech",
+    label: "Sprache / Kommunikation",
+    subareas: [
+      ["artikulation", "Aussprache / Artikulation"],
+      ["phonologie", "Lautwahrnehmung / phonologische Bewusstheit"],
+      ["wortschatz", "Wortschatz / Wortbedeutung"],
+      ["verstehen", "Sprachverständnis / Arbeitsaufträge"],
+      ["grammatik", "Grammatik / Satzbildung"],
+      ["erzaehlen", "Erzählfähigkeit / Versprachlichen"],
+      ["kommunikation", "Kommunikation / Gesprächsverhalten"],
+      ["stimme", "Stimme / Sprechweise"],
+      ["redefluss", "Redefluss / Wortfindung"]
+    ]
+  },
+  {
+    id: "motor",
+    label: "Motorik",
+    subareas: [
+      ["grobmotorik", "Grobmotorik"],
+      ["feinmotorik", "Feinmotorik"],
+      ["graphomotorik", "Graphomotorik"],
+      ["planung", "Bilaterale Koordination / Handlungsplanung"]
+    ]
+  },
+  {
+    id: "perception",
+    label: "Wahrnehmung",
+    subareas: [
+      ["visuomotorik", "Visuomotorische Koordination"],
+      ["figur_grund", "Figur-Grund-Wahrnehmung"],
+      ["konstanz", "Wahrnehmungskonstanz"],
+      ["raum_lage", "Raum-Lage-Wahrnehmung"],
+      ["raeumliche_beziehungen", "Räumliche Beziehungen"],
+      ["auditive_differenzierung", "Auditive Differenzierung"],
+      ["auditive_gliederung", "Auditive Gliederung / phonologische Wahrnehmung"],
+      ["auditive_identifikation", "Auditive Identifikation"],
+      ["auditives_gedaechtnis", "Auditives Gedächtnis"],
+      ["taktil_kinaesthetisch", "Taktil-kinästhetische Wahrnehmung"],
+      ["vestibulaer", "Vestibuläre Wahrnehmung"]
+    ]
+  },
+  {
+    id: "cognition",
+    label: "Kognition",
+    subareas: [
+      ["aufmerksamkeit", "Aufmerksamkeit / Konzentration"],
+      ["gedaechtnis", "Kurzzeit- und Langzeitgedächtnis"],
+      ["denken", "Problemlösen / Übertragung"]
+    ]
+  },
+  {
+    id: "german",
+    label: "Deutsch",
+    subareas: [
+      ["phonologie", "Vorläuferfähigkeiten / phonologische Bewusstheit"],
+      ["buchstaben", "Buchstabenkenntnis und Laut-Buchstaben-Zuordnung"],
+      ["lesen", "Lesen"],
+      ["schreiben", "Schreiben / Rechtschreiben"],
+      ["text", "Textverständnis / Umgang mit Texten"],
+      ["sprache_untersuchen", "Sprache untersuchen / erste Rechtschreibstrategien"]
+    ]
+  },
+  {
+    id: "math",
+    label: "Mathematik",
+    subareas: [
+      ["praenumerisch", "Pränumerische Kompetenzen"],
+      ["mengen", "Mengenerfassung"],
+      ["zaehlen", "Zählen und Zahlwortreihe"],
+      ["ziffern", "Ziffern und Zahlzuordnung"],
+      ["beziehungen", "Zahlbeziehungen"],
+      ["zerlegung", "Zerlegung"],
+      ["addition_subtraktion", "Addition und Subtraktion"],
+      ["zahlenraum", "Orientierung im Zahlenraum"],
+      ["sachrechnen", "Sachrechnen / Größen optional"]
+    ]
+  }
+];
+
+const m = (areaId, subareaId) => ({ areaId, subareaId });
+const item = (id, text, mappings) => ({ id, text, mappings });
+
+const MODULE_GROUPS = [
+  "Basis & Kommunikation",
+  "Wahrnehmung & Bewegung",
+  "Denken & Lernen",
+  "Deutsch",
+  "Mathematik",
+  "Lernen & Verhalten"
+];
+
+const MODULES = [
+  {
+    id: "B3", group: "Basis & Kommunikation", title: "Schulvormittag", description: "Teilhabe, Routinen und Selbstständigkeit im Alltag",
+    items: [
+      item("1", "kennt wiederkehrende Abläufe des Schultages", [m("learning", "orientierung")]),
+      item("2", "findet benötigte Arbeitsmittel", [m("learning", "orientierung"), m("learning", "organisation")]),
+      item("3", "beginnt eine bekannte Aufgabe nach Aufforderung", [m("learning", "aufgabenbeginn")]),
+      item("4", "bleibt für eine überschaubare Zeit bei der Aufgabe", [m("learning", "ausdauer"), m("cognition", "aufmerksamkeit")]),
+      item("5", "wechselt mit Unterstützung zwischen Unterrichtssituationen", [m("learning", "orientierung"), m("emotional", "selbstkontrolle")])
+    ]
+  },
+  {
+    id: "B4", group: "Basis & Kommunikation", title: "Kommunikation und soziale Orientierung", description: "Verstehen, Bedürfnisse und Kontakt",
+    items: [
+      item("1", "versteht kurze vertraute Arbeitsaufträge", [m("speech", "verstehen")]),
+      item("2", "zeigt oder sagt, wenn etwas unklar ist", [m("speech", "kommunikation"), m("emotional", "selbstwahrnehmung")]),
+      item("3", "äußert grundlegende Bedürfnisse verständlich", [m("speech", "kommunikation"), m("emotional", "selbstwahrnehmung")]),
+      item("4", "nimmt angemessen Kontakt zu Erwachsenen oder Kindern auf", [m("emotional", "kontakt"), m("speech", "kommunikation")]),
+      item("5", "beachtet einfache Gesprächs- und Gruppenregeln", [m("speech", "kommunikation"), m("emotional", "selbstkontrolle")])
+    ]
+  },
+  {
+    id: "W1", group: "Wahrnehmung & Bewegung", title: "Visuelle Beobachtung im Schulalltag", description: "Orientierung, Suchen und visuelle Ermüdung",
+    items: [
+      item("1", "findet die richtige Stelle auf einer übersichtlichen Arbeitsseite", [m("perception", "raeumliche_beziehungen")]),
+      item("2", "erkennt wichtige Informationen vor einem unruhigen Hintergrund", [m("perception", "figur_grund")]),
+      item("3", "unterscheidet ähnlich aussehende Zeichen", [m("perception", "konstanz"), m("perception", "raum_lage")]),
+      item("4", "überträgt eine einfache Anordnung passend", [m("perception", "raeumliche_beziehungen"), m("perception", "visuomotorik")]),
+      item("5", "bleibt bei kurzer visueller Arbeit ohne deutliche Ermüdung", [m("cognition", "aufmerksamkeit")])
+    ]
+  },
+  {
+    id: "W2", group: "Wahrnehmung & Bewegung", title: "Visuelle Verarbeitung", description: "Unterscheidung, Raumlage, Figur-Grund und Gedächtnis",
+    items: [
+      item("1", "findet identische Formen sicher", [m("perception", "konstanz")]),
+      item("2", "unterscheidet ähnliche Formen und Zeichen", [m("perception", "konstanz"), m("perception", "raum_lage")]),
+      item("3", "findet Zielformen in unruhigem Material", [m("perception", "figur_grund")]),
+      item("4", "ordnet oben, unten, links, rechts und zwischen passend zu", [m("perception", "raum_lage"), m("perception", "raeumliche_beziehungen")]),
+      item("5", "merkt sich eine kurze visuelle Folge", [m("cognition", "gedaechtnis")]),
+      item("6", "setzt einfache Muster fort und überträgt die Regel", [m("cognition", "denken"), m("math", "praenumerisch")])
+    ]
+  },
+  {
+    id: "W3", group: "Wahrnehmung & Bewegung", title: "Auditive Verarbeitung", description: "Differenzierung, Lautfolgen, Aufträge und Behalten",
+    items: [
+      item("1", "unterscheidet bekannte Umweltgeräusche", [m("perception", "auditive_differenzierung")]),
+      item("2", "unterscheidet ähnlich klingende Laute oder Silben", [m("perception", "auditive_differenzierung"), m("speech", "phonologie")]),
+      item("3", "erkennt Reime oder gleiche Lautanfänge", [m("perception", "auditive_identifikation"), m("german", "phonologie")]),
+      item("4", "gliedert kurze Wörter in Silben oder Laute", [m("perception", "auditive_gliederung"), m("german", "phonologie")]),
+      item("5", "wiederholt kurze Laut-, Wort- oder Rhythmusfolgen", [m("perception", "auditives_gedaechtnis"), m("cognition", "gedaechtnis")]),
+      item("6", "behält einen mehrteiligen mündlichen Auftrag", [m("perception", "auditives_gedaechtnis"), m("speech", "verstehen")])
+    ]
+  },
+  {
+    id: "W4", group: "Wahrnehmung & Bewegung", title: "Bewegung und Koordination", description: "Gleichgewicht, beidseitige Koordination und Körpermittellinie",
+    items: [
+      item("1", "geht, läuft, stoppt und wechselt die Richtung sicher", [m("motor", "grobmotorik")]),
+      item("2", "hält kurz auf beiden Seiten das Gleichgewicht", [m("motor", "grobmotorik"), m("perception", "vestibulaer")]),
+      item("3", "wirft, fängt oder rollt einen großen Ball gezielt", [m("motor", "grobmotorik"), m("motor", "planung")]),
+      item("4", "setzt beide Hände oder Körperseiten abgestimmt ein", [m("motor", "planung")]),
+      item("5", "führt eine einfache Überkreuzbewegung nach Vormachen aus", [m("motor", "planung")]),
+      item("6", "plant eine Folge aus drei Bewegungen", [m("motor", "planung"), m("cognition", "gedaechtnis")])
+    ]
+  },
+  {
+    id: "W5", group: "Wahrnehmung & Bewegung", title: "Fein- und Visuomotorik", description: "Handgebrauch, Auge-Hand-Koordination und Graphomotorik",
+    items: [
+      item("1", "greift und sortiert kleine Gegenstände gezielt", [m("motor", "feinmotorik")]),
+      item("2", "baut ein einfaches Modell nach", [m("perception", "visuomotorik"), m("motor", "feinmotorik")]),
+      item("3", "fährt Linien oder eine einfache Spur kontrolliert nach", [m("perception", "visuomotorik"), m("motor", "graphomotorik")]),
+      item("4", "kopiert einfache Formen", [m("perception", "visuomotorik"), m("motor", "graphomotorik")]),
+      item("5", "schneidet an einer geraden oder gebogenen Linie", [m("motor", "feinmotorik"), m("perception", "visuomotorik")]),
+      item("6", "stabilisiert das Blatt und führt den Stift mit angemessenem Druck", [m("motor", "graphomotorik"), m("motor", "feinmotorik")])
+    ]
+  },
+  {
+    id: "L1", group: "Denken & Lernen", title: "Denken und Lernen", description: "Sprachreduziertes Problemlösen und Strategiewechsel",
+    items: [
+      item("1", "sortiert Material nach einem erkennbaren Merkmal", [m("cognition", "denken"), m("math", "praenumerisch")]),
+      item("2", "erkennt und ergänzt einfache Reihen", [m("cognition", "denken"), m("math", "praenumerisch")]),
+      item("3", "merkt sich eine kurze Handlungsfolge", [m("cognition", "gedaechtnis")]),
+      item("4", "probiert nach einem erfolglosen Versuch einen anderen Weg", [m("cognition", "denken"), m("emotional", "frustration")]),
+      item("5", "überträgt eine bekannte Regel auf neues Material", [m("cognition", "denken")])
+    ]
+  },
+  {
+    id: "L2", group: "Denken & Lernen", title: "Kurz lernen und erneut prüfen", description: "Lernbarkeit, Behalten und Übertragen",
+    items: [
+      item("1", "zeigt beim ersten Versuch eine eigene Strategie", [m("cognition", "denken")]),
+      item("2", "nutzt die Strategie nach kurzem Vormachen", [m("cognition", "denken"), m("learning", "mitarbeit")]),
+      item("3", "ruft die Strategie zehn Minuten später ab", [m("cognition", "gedaechtnis")]),
+      item("4", "ruft die Strategie am Folgetag ab", [m("cognition", "gedaechtnis")]),
+      item("5", "überträgt die Strategie auf ähnliches Material", [m("cognition", "denken")])
+    ]
+  },
+  {
+    id: "D1", group: "Deutsch", title: "Laute, Silben und Buchstaben", description: "Vorläuferfähigkeiten und Laut-Buchstaben-Zuordnung",
+    items: [
+      item("1", "erkennt Reime", [m("german", "phonologie"), m("speech", "phonologie")]),
+      item("2", "gliedert Wörter in Silben", [m("german", "phonologie")]),
+      item("3", "hört Anlaute in einfachen Wörtern", [m("german", "phonologie"), m("perception", "auditive_gliederung")]),
+      item("4", "verbindet Laute zu Silben", [m("german", "phonologie")]),
+      item("5", "erkennt und benennt bekannte Buchstaben", [m("german", "buchstaben")]),
+      item("6", "ordnet bekannten Buchstaben passende Laute zu", [m("german", "buchstaben")])
+    ]
+  },
+  {
+    id: "D2", group: "Deutsch", title: "Lesen Grundlagen", description: "Silben, Pseudowörter, Wörter und kurze Sätze",
+    items: [
+      item("1", "liest einfache Silben", [m("german", "lesen")]),
+      item("2", "liest lautgetreue Pseudowörter ohne bloßes Raten", [m("german", "lesen")]),
+      item("3", "liest kurze lautgetreue Wörter", [m("german", "lesen")]),
+      item("4", "liest bekannte Wörter zunehmend sicher", [m("german", "lesen")]),
+      item("5", "liest einen kurzen Satz genau", [m("german", "lesen")]),
+      item("6", "beantwortet eine einfache Frage zum Satz", [m("german", "text")])
+    ]
+  },
+  {
+    id: "D3", group: "Deutsch", title: "Schreiben Grundlagen", description: "Verschriften, Abschreiben und freies Schreiben",
+    items: [
+      item("1", "schreibt bekannte Buchstaben formklar", [m("german", "buchstaben"), m("motor", "graphomotorik")]),
+      item("2", "verschriftet hörbare Laute in einfachen Wörtern", [m("german", "schreiben")]),
+      item("3", "schreibt ein lautgetreues Wort möglichst vollständig", [m("german", "schreiben")]),
+      item("4", "kopiert ein Wort oder einen kurzen Satz vollständig", [m("german", "schreiben")]),
+      item("5", "setzt in einem einfachen Satz Wortgrenzen", [m("german", "schreiben")]),
+      item("6", "kontrolliert Geschriebenes mit einer Vorlage", [m("german", "schreiben"), m("learning", "organisation")])
+    ]
+  },
+  {
+    id: "D4", group: "Deutsch", title: "Sprachverstehen und Erzählen", description: "Aufträge verstehen und Inhalte geordnet wiedergeben",
+    items: [
+      item("1", "versteht einen kurzen vertrauten Auftrag", [m("speech", "verstehen")]),
+      item("2", "versteht einen mehrteiligen Auftrag mit Visualisierung", [m("speech", "verstehen")]),
+      item("3", "findet passende Wörter zu Bildern oder Handlungen", [m("speech", "wortschatz")]),
+      item("4", "bildet verständliche einfache Sätze", [m("speech", "grammatik")]),
+      item("5", "erzählt eine kurze Bildfolge geordnet", [m("speech", "erzaehlen"), m("german", "text")])
+    ]
+  },
+  {
+    id: "D5", group: "Deutsch", title: "Lesen erweitert", description: "Kompetenzen Ende Klasse 1 bis Klasse 2",
+    items: [
+      item("1", "liest neue Wörter genau", [m("german", "lesen")]),
+      item("2", "liest mehrere Sätze zusammenhängend", [m("german", "lesen")]),
+      item("3", "beachtet Satzgrenzen und Satzzeichen", [m("german", "lesen")]),
+      item("4", "entnimmt einem kurzen Text Informationen", [m("german", "text")]),
+      item("5", "gibt die zentrale Aussage eines kurzen Textes wieder", [m("german", "text")])
+    ]
+  },
+  {
+    id: "D9", group: "Deutsch", title: "Schreiben und Rechtschreibung erweitert", description: "Eigene Sätze und erste Strategien",
+    items: [
+      item("1", "schreibt einen verständlichen eigenen Satz", [m("german", "schreiben")]),
+      item("2", "nutzt Satzanfang und Satzschluss", [m("german", "schreiben")]),
+      item("3", "schreibt bekannte Nomen groß", [m("german", "sprache_untersuchen")]),
+      item("4", "spricht Wörter beim Schreiben deutlich mit", [m("german", "sprache_untersuchen")]),
+      item("5", "nutzt eine bekannte Abschreib- oder Kontrollstrategie", [m("german", "schreiben"), m("german", "sprache_untersuchen")])
+    ]
+  },
+  {
+    id: "M1", group: "Mathematik", title: "Mengen und Zählen", description: "Zahlbegriff und Kardinalverständnis",
+    items: [
+      item("1", "erfasst kleine Mengen ohne Abzählen", [m("math", "mengen")]),
+      item("2", "erkennt strukturierte Mengen im Würfel- oder Zehnerbild", [m("math", "mengen")]),
+      item("3", "ordnet Mengen passenden Zahlen zu", [m("math", "mengen"), m("math", "ziffern")]),
+      item("4", "zählt eine Menge mit Eins-zu-eins-Zuordnung", [m("math", "zaehlen")]),
+      item("5", "sagt, wo mehr, weniger oder gleich viele sind", [m("math", "mengen"), m("math", "beziehungen")]),
+      item("6", "zählt von einer gegebenen Zahl weiter", [m("math", "zaehlen")])
+    ]
+  },
+  {
+    id: "M2", group: "Mathematik", title: "Ziffern, Zahlraum und Stellenwert", description: "Zahlen bis 20 und Anschluss bis 100",
+    items: [
+      item("1", "erkennt und schreibt Ziffern formklar", [m("math", "ziffern")]),
+      item("2", "bestimmt Vorgänger und Nachfolger", [m("math", "ziffern"), m("math", "beziehungen")]),
+      item("3", "ordnet Zahlen der Größe nach", [m("math", "beziehungen")]),
+      item("4", "orientiert sich im Zahlenraum bis 20", [m("math", "zahlenraum")]),
+      item("5", "nutzt Zehner und Einer bei zweistelligen Zahlen", [m("math", "zahlenraum"), m("math", "beziehungen")]),
+      item("6", "orientiert sich mit Hilfe im Zahlenraum bis 100", [m("math", "zahlenraum")])
+    ]
+  },
+  {
+    id: "M3", group: "Mathematik", title: "Zerlegen und Rechnen", description: "Grundoperationen bis 20 und Strategien",
+    items: [
+      item("1", "zerlegt Zahlen handelnd oder bildlich", [m("math", "zerlegung")]),
+      item("2", "ergänzt sicher bis 10", [m("math", "zerlegung")]),
+      item("3", "versteht Plus als Dazukommen", [m("math", "addition_subtraktion")]),
+      item("4", "versteht Minus als Wegnehmen oder Unterschied", [m("math", "addition_subtraktion")]),
+      item("5", "löst einfache Aufgaben zunehmend ohne Material", [m("math", "addition_subtraktion")]),
+      item("6", "nutzt Zahlzerlegungen beim Rechnen", [m("math", "zerlegung"), m("math", "addition_subtraktion")]),
+      item("7", "erklärt einen Rechenweg mit Unterstützung", [m("math", "addition_subtraktion"), m("speech", "erzaehlen")])
+    ]
+  },
+  {
+    id: "M4", group: "Mathematik", title: "Sachrechnen, Muster und Größen", description: "Operationsverständnis und Anwendung",
+    items: [
+      item("1", "setzt einfache Muster fort", [m("math", "praenumerisch")]),
+      item("2", "erfasst eine einfache Sachsituation", [m("math", "sachrechnen")]),
+      item("3", "ordnet eine passende Rechenfrage oder Rechnung zu", [m("math", "sachrechnen")]),
+      item("4", "formuliert eine passende Antwort", [m("math", "sachrechnen"), m("speech", "grammatik")]),
+      item("5", "vergleicht Längen oder Mengen handelnd", [m("math", "sachrechnen")])
+    ]
+  },
+  {
+    id: "M5", group: "Mathematik", title: "Mathematik erweitert", description: "Zahlraum und Rechnen bis 100",
+    items: [
+      item("1", "liest, schreibt und ordnet Zahlen bis 100", [m("math", "zahlenraum")]),
+      item("2", "zerlegt zweistellige Zahlen in Zehner und Einer", [m("math", "beziehungen"), m("math", "zahlenraum")]),
+      item("3", "rechnet einfache Plusaufgaben im Zahlenraum bis 100", [m("math", "addition_subtraktion")]),
+      item("4", "rechnet einfache Minusaufgaben im Zahlenraum bis 100", [m("math", "addition_subtraktion")]),
+      item("5", "nutzt Aufgabenbeziehungen oder bekannte Strategien", [m("math", "addition_subtraktion"), m("cognition", "denken")])
+    ]
+  },
+  {
+    id: "V1", group: "Lernen & Verhalten", title: "Ausgangsbeobachtung", description: "Anforderungen, Blockieren und Rückkehr",
+    items: [
+      item("1", "beginnt eine bekannte leichte Aufgabe", [m("learning", "aufgabenbeginn")]),
+      item("2", "beginnt eine neue oder ungewohnte Aufgabe", [m("learning", "aufgabenbeginn"), m("emotional", "frustration")]),
+      item("3", "bleibt nach einem Fehler ansprechbar", [m("emotional", "frustration"), m("emotional", "selbstkontrolle")]),
+      item("4", "kehrt nach einer kurzen Pause zur Aufgabe zurück", [m("learning", "ausdauer"), m("emotional", "frustration")]),
+      item("5", "benennt oder zeigt eine passende Hilfe", [m("emotional", "selbstwahrnehmung"), m("learning", "mitarbeit")])
+    ]
+  },
+  {
+    id: "V2", group: "Lernen & Verhalten", title: "Lern- und Arbeitsverhalten", description: "Beginn, Ausdauer, Fehlerreaktion und Rückkehr",
+    items: [
+      item("1", "erfasst den Arbeitsauftrag", [m("learning", "aufgabenbeginn"), m("speech", "verstehen")]),
+      item("2", "beginnt nach kurzer Orientierung", [m("learning", "aufgabenbeginn")]),
+      item("3", "bleibt bei einer überschaubaren Aufgabe", [m("learning", "ausdauer"), m("cognition", "aufmerksamkeit")]),
+      item("4", "arbeitet nach einer Rückmeldung weiter", [m("learning", "organisation"), m("emotional", "frustration")]),
+      item("5", "beendet eine begonnene Aufgabe", [m("learning", "ausdauer")]),
+      item("6", "kontrolliert ein Ergebnis mit Hilfe", [m("learning", "organisation"), m("cognition", "denken")])
+    ]
+  },
+  {
+    id: "V3", group: "Lernen & Verhalten", title: "Hilfe annehmen und Neues lernen", description: "Unterstützung, Strategien und Transfer",
+    items: [
+      item("1", "nimmt Unterstützung nach kurzer Erklärung an", [m("learning", "mitarbeit"), m("emotional", "frustration")]),
+      item("2", "stellt Rückfragen, wenn etwas unklar ist", [m("learning", "aufgabenbeginn"), m("speech", "kommunikation")]),
+      item("3", "probiert nach Vormachen eine neue Strategie aus", [m("cognition", "denken"), m("learning", "mitarbeit")]),
+      item("4", "überträgt Gezeigtes auf eine ähnliche Aufgabe", [m("cognition", "denken")]),
+      item("5", "bleibt bei neuen Aufgaben trotz Unsicherheit dran", [m("emotional", "frustration"), m("learning", "ausdauer")])
+    ]
+  },
+  {
+    id: "V4", group: "Lernen & Verhalten", title: "Sozial-emotionale Beobachtung", description: "Regulation, Konflikte, Rückzug und Aggression",
+    items: [
+      item("1", "bleibt bei Anspannung ansprechbar", [m("emotional", "frustration"), m("emotional", "selbstkontrolle")]),
+      item("2", "nutzt ein vereinbartes Stopp- oder Pausensignal", [m("emotional", "selbstkontrolle")]),
+      item("3", "akzeptiert Grenzen anderer", [m("emotional", "kontakt"), m("emotional", "selbstkontrolle")]),
+      item("4", "holt sich bei einem Konflikt Hilfe", [m("emotional", "kontakt")]),
+      item("5", "arbeitet in einer überschaubaren Gruppe mit", [m("emotional", "kontakt"), m("learning", "mitarbeit")]),
+      item("6", "reflektiert eine Situation nach der Beruhigung", [m("emotional", "selbstwahrnehmung"), m("emotional", "selbstkontrolle")])
+    ]
+  },
+  {
+    id: "V6", group: "Lernen & Verhalten", title: "Situationsvergleich", description: "Auslöser und Gelingensbedingungen vergleichen",
+    items: [
+      item("1", "zeigt die Kompetenz in einer vertrauten Situation", [m("learning", "mitarbeit")]),
+      item("2", "zeigt die Kompetenz bei einer neuen Anforderung", [m("learning", "mitarbeit"), m("emotional", "frustration")]),
+      item("3", "zeigt die Kompetenz im ruhigen Einzelsetting", [m("cognition", "aufmerksamkeit")]),
+      item("4", "zeigt die Kompetenz in der Klasse oder Gruppe", [m("cognition", "aufmerksamkeit"), m("emotional", "kontakt")]),
+      item("5", "profitiert erkennbar von einer passenden Anpassung", [m("learning", "orientierung")])
+    ]
+  }
+];
+
+const REPORT_TEMPLATES = {
+  "learning|aufgabenbeginn": {
+    goal: "Das Kind beginnt eine überschaubare Aufgabe nach kurzer Orientierung zunehmend selbstständig.",
+    measures: "Arbeitsaufträge werden kurz gegliedert und der erste Schritt sichtbar gemacht. Eine Startkarte oder kurze Modellaufgabe wird eingesetzt.",
+    evaluation: "In zwei vergleichbaren Arbeitsphasen pro Woche wird dokumentiert, mit welcher Hilfe der Aufgabenbeginn gelingt."
+  },
+  "learning|ausdauer": {
+    goal: "Das Kind arbeitet für eine vereinbarte kurze Zeit weiter und beendet eine begonnene Aufgabe zunehmend häufiger.",
+    measures: "Aufgaben werden in sichtbare Teilschritte gegliedert. Arbeitszeit und kurze Pause werden verlässlich vereinbart.",
+    evaluation: "Bearbeitungsdauer, benötigte Impulse und Abschluss der Aufgabe werden über sechs Wochen verglichen."
+  },
+  "learning|mitarbeit": {
+    goal: "Das Kind nimmt passende Unterstützung zunehmend an und nutzt vereinbarte Hilfen bei neuen Aufgaben.",
+    measures: "Hilfen werden als Wahl angeboten, kurz vorgemacht und nach einem erfolgreichen Teilschritt wieder reduziert.",
+    evaluation: "In neuen Aufgaben wird notiert, welche Hilfe angenommen wird und ob anschließend selbstständig weitergearbeitet wird."
+  },
+  "emotional|frustration": {
+    goal: "Das Kind bleibt bei Fehlern und schwierigen Aufgaben zunehmend ansprechbar und nutzt eine vereinbarte Regulationsstrategie.",
+    measures: "Schwierige Aufgaben werden angekündigt und kleinschrittig angeboten. Pausenkarte, Wahlmöglichkeit und ruhige Rückkehr zur Aufgabe werden verbindlich genutzt.",
+    evaluation: "Auslöser, Intensität, Rückkehrzeit und wirksame Hilfe werden in vergleichbaren Situationen dokumentiert."
+  },
+  "emotional|selbstkontrolle": {
+    goal: "Das Kind nutzt in angespannten Situationen ein vereinbartes Stopp- oder Pausensignal und bleibt zunehmend handlungsfähig.",
+    measures: "Ein einheitliches Stoppsignal und ein kurzer Beruhigungsweg werden vorab geübt und vom Team gleich eingesetzt.",
+    evaluation: "Es wird beobachtet, ob das Signal vor einer Eskalation angenommen und die Rückkehr ermöglicht wird."
+  },
+  "speech|verstehen": {
+    goal: "Das Kind versteht kurze, klar formulierte Arbeitsaufträge zunehmend sicher und setzt sie mit weniger Unterstützung um.",
+    measures: "Aufträge werden kurz gesprochen, visualisiert und vom Kind durch Zeigen oder Wiederholen gesichert.",
+    evaluation: "Die Anzahl selbstständig umgesetzter Handlungsschritte wird in ruhiger und alltäglicher Situation verglichen."
+  },
+  "cognition|gedaechtnis": {
+    goal: "Das Kind behält kurze Aufträge oder Strategien und ruft sie nach einer Pause zunehmend sicher ab.",
+    measures: "Inhalte werden mit Bild, Handlung und kurzer Wiederholung gesichert. Die Hilfe wird schrittweise reduziert.",
+    evaluation: "Abruf nach zehn Minuten und am Folgetag wird mit einer ähnlichen Aufgabe dokumentiert."
+  },
+  "cognition|denken": {
+    goal: "Das Kind nutzt eine bekannte Strategie zunehmend selbstständig bei einer ähnlichen neuen Aufgabe.",
+    measures: "Eine Strategie wird modelliert, gemeinsam benannt und anschließend mit verändertem Material erprobt.",
+    evaluation: "Es wird festgehalten, ob die Strategie erkannt, behalten und ohne erneutes Vormachen übertragen wird."
+  },
+  "german|lesen": {
+    goal: "Das Kind liest kurze lautgetreue Wörter und einfache Sätze zunehmend genau und sinnbezogen.",
+    measures: "Kurze Leseeinheiten mit Silbenmarkierung, wiederholtem Lesen und Pseudowörtern werden regelmäßig durchgeführt.",
+    evaluation: "Lesegenauigkeit, Rateverhalten und Verständnis werden mit vergleichbaren Wort- und Satzlisten überprüft."
+  },
+  "german|schreiben": {
+    goal: "Das Kind verschriftet Laute in einfachen Wörtern zunehmend vollständig und kontrolliert Geschriebenes mit einer festen Strategie.",
+    measures: "Lautgetreue Wörter, deutliches Mitsprechen, Silbenhilfe und eine kurze Abschreib- oder Kontrollroutine werden eingesetzt.",
+    evaluation: "Zwei kurze Schreibproben werden nach Lautvollständigkeit, Wortgrenzen und genutzter Hilfe verglichen."
+  },
+  "math|mengen": {
+    goal: "Das Kind erfasst strukturierte Mengen und ordnet ihnen zunehmend sicher passende Zahlen zu.",
+    measures: "Würfelbilder, Zehnerfeld und handelndes Material werden miteinander verknüpft; reines Abzählen wird schrittweise reduziert.",
+    evaluation: "Mengen bis zehn werden in wechselnder Darstellung erneut angeboten und Strategie sowie Treffer werden dokumentiert."
+  },
+  "math|zahlenraum": {
+    goal: "Das Kind orientiert sich im vereinbarten Zahlenraum zunehmend sicher und nutzt Zehner und Einer zur Einordnung.",
+    measures: "Zahlenstrahl, Stellenwertmaterial und Zahlendarstellungen werden handelnd, bildlich und symbolisch verbunden.",
+    evaluation: "Lesen, Ordnen, Nachbarzahlen und Stellenwert werden mit vergleichbaren Aufgaben erneut geprüft."
+  },
+  "math|addition_subtraktion": {
+    goal: "Das Kind löst Plus- und Minusaufgaben im vereinbarten Zahlenraum zunehmend mit einer passenden Strategie.",
+    measures: "Rechenwege werden mit Material aufgebaut, versprachlicht und anschließend in kurzen Aufgabenserien gefestigt.",
+    evaluation: "Ergebnis, Strategie und benötigtes Material werden bei bekannten und ähnlichen neuen Aufgaben verglichen."
+  },
+  "perception|auditive_differenzierung": {
+    goal: "Das Kind unterscheidet ausgewählte Geräusche, Laute oder ähnlich klingende Wörter in ruhiger Situation zunehmend sicher.",
+    measures: "Kurze Hörvergleiche werden mit deutlicher Aussprache, wenig Störschall und visueller Sicherung durchgeführt.",
+    evaluation: "Die gleiche Unterscheidungsaufgabe wird in ruhiger und alltäglicher Situation erneut beobachtet."
+  },
+  "perception|raum_lage": {
+    goal: "Das Kind unterscheidet Lage, Richtung und ausgewählte gedrehte Zeichen zunehmend sicher.",
+    measures: "Raumlage wird handelnd, mit Lagekarten und klarer Seitenstruktur aufgebaut; Markierungen werden schrittweise reduziert.",
+    evaluation: "Vergleichbare Lage- und Zeichenaufgaben werden mit und ohne Markierung erneut angeboten."
+  },
+  "motor|graphomotorik": {
+    goal: "Das Kind führt Linien, Formen, Buchstaben und Zahlen zunehmend kontrolliert und formklar aus.",
+    measures: "Kurze graphomotorische Aufgaben, passende Lineatur, geeigneter Stift und reduzierte Schreibmenge werden erprobt.",
+    evaluation: "Schreibproben und Beobachtungen zu Haltung, Druck, Form und Ermüdung werden verglichen."
+  },
+  "motor|planung": {
+    goal: "Das Kind setzt beide Körperseiten bei einer einfachen Bewegungs- oder Arbeitsfolge zunehmend abgestimmt ein.",
+    measures: "Kurze beidseitige Bewegungsfolgen werden vorgemacht, rhythmisch begleitet und ohne Zeitdruck wiederholt.",
+    evaluation: "Planung, Reihenfolge, Rhythmus und benötigtes Vormachen werden in gleichen Aufgaben dokumentiert."
+  }
+};
+
+function areaById(id) {
+  return AREAS.find((area) => area.id === id);
+}
+
+function subareaLabel(areaId, subareaId) {
+  return areaById(areaId)?.subareas.find(([id]) => id === subareaId)?.[1] || subareaId;
+}
+
+function moduleById(id) {
+  return MODULES.find((module) => module.id === id);
+}
+
+function responseKey(moduleId, itemId) {
+  return `${moduleId}:${itemId}`;
+}
+
+function profileKey(areaId, subareaId) {
+  return `${areaId}|${subareaId}`;
+}
+
+
+
+const codeMap = new Map(EVIDENCE_CODES.map((code) => [code.value, code]));
+
+function suggestedRating(codes) {
+  const observed = codes.filter(Boolean);
+  if (!observed.length) return "nb";
+  const known = observed.filter((code) => code !== "?");
+  if (!known.length) return "nb";
+  if (known.some((code) => code === "G" || code === "N")) return "-";
+  if (known.every((code) => code === "S")) return "+";
+  return "o";
+}
+
+function unique(items) {
+  return [...new Set(items.map((value) => value?.trim()).filter(Boolean))];
+}
+
+function buildProfile(state) {
+  const groups = new Map();
+  for (const module of MODULES) {
+    if (!state.selectedModules.includes(module.id)) continue;
+    for (const observation of module.items) {
+      const response = state.responses[responseKey(module.id, observation.id)];
+      if (!response?.code) continue;
+      for (const mapping of observation.mappings) {
+        const key = profileKey(mapping.areaId, mapping.subareaId);
+        const existing = groups.get(key) || {
+          key,
+          areaId: mapping.areaId,
+          subareaId: mapping.subareaId,
+          codes: [],
+          evidence: [],
+          supports: [],
+          contexts: [],
+          sources: []
+        };
+        existing.codes.push(response.code);
+        if (response.evidence) existing.evidence.push(response.evidence);
+        if (response.support) existing.supports.push(response.support);
+        if (response.context) existing.contexts.push(response.context);
+        existing.sources.push(`${module.id} · ${observation.text}`);
+        groups.set(key, existing);
+      }
+    }
+  }
+
+  return [...groups.values()]
+    .map((entry) => {
+      const suggestion = suggestedRating(entry.codes);
+      const rating = state.manualRatings[entry.key] || suggestion;
+      return {
+        ...entry,
+        areaLabel: areaById(entry.areaId)?.label || entry.areaId,
+        subareaLabel: subareaLabel(entry.areaId, entry.subareaId),
+        suggestion,
+        rating,
+        evidence: unique(entry.evidence),
+        supports: unique(entry.supports),
+        contexts: unique(entry.contexts),
+        sources: unique(entry.sources),
+        isPriority: state.priorities.includes(entry.key)
+      };
+    })
+    .sort((a, b) => {
+      const areaOrder = AREAS.findIndex((area) => area.id === a.areaId) - AREAS.findIndex((area) => area.id === b.areaId);
+      return areaOrder || a.subareaLabel.localeCompare(b.subareaLabel, "de");
+    });
+}
+
+function progressForModule(state, module) {
+  const answered = module.items.filter((observation) => state.responses[responseKey(module.id, observation.id)]?.code).length;
+  return { answered, total: module.items.length, complete: answered === module.items.length };
+}
+
+function progressForArea(profile, areaId) {
+  const rows = profile.filter((row) => row.areaId === areaId);
+  return { observed: rows.length, needs: rows.filter((row) => row.rating === "-").length };
+}
+
+function defaultReportFor(row) {
+  const template = REPORT_TEMPLATES[row.key] || {
+    goal: `Das Kind zeigt die nächste Kompetenz im Bereich „${row.subareaLabel}“ in vergleichbaren Situationen zunehmend selbstständig.`,
+    measures: "Die wirksame Hilfe aus dem Screening wird gezielt eingesetzt, dokumentiert und schrittweise reduziert.",
+    evaluation: "Die Entwicklung wird nach sechs bis acht Wochen mit einer vergleichbaren Aufgabe unter dokumentierten Bedingungen überprüft."
+  };
+  const evidenceText = row.evidence.length
+    ? row.evidence.slice(0, 3).join(" ")
+    : `Im Screening zeigte sich im Bereich „${row.subareaLabel}“ ein ${ratingDescription(row.rating)} Ergebnis.`;
+  const supportText = row.supports.length ? ` Hilfreich war: ${row.supports.slice(0, 2).join("; ")}.` : "";
+  const contextText = row.contexts.length ? ` Beobachtet wurde dies: ${row.contexts.slice(0, 2).join("; ")}.` : "";
+  return {
+    stand: `${evidenceText}${supportText}${contextText}`.trim(),
+    goal: template.goal,
+    measures: `${template.measures} ${template.evaluation}`.trim()
+  };
+}
+
+function reportForRow(state, row) {
+  return { ...defaultReportFor(row), ...(state.reportEdits[row.key] || {}) };
+}
+
+function ratingDescription(rating) {
+  return APP_RATINGS.find((entry) => entry.value === rating)?.description || "noch nicht eingeordnetes";
+}
+
+function buildTransferText(state, profile) {
+  const priorities = state.priorities
+    .map((key) => profile.find((row) => row.key === key))
+    .filter(Boolean)
+    .slice(0, 3);
+  const caseData = state.caseData;
+  const head = [
+    "SCREENING-KOMPASS · ÜBERTRAGUNG ZUM FÖRDERKOMPASS",
+    `Kind / Kürzel: ${caseData.label || "—"}`,
+    `Klasse / Schuljahr: ${[caseData.className, caseData.schoolYear].filter(Boolean).join(" · ") || "—"}`,
+    `Zeitraum: ${caseData.period || "—"}`,
+    `Fragestellung: ${caseData.question || "—"}`,
+    `Stärken und Gelingensbedingungen: ${caseData.strengths || "—"}`,
+    ""
+  ];
+  if (!priorities.length) {
+    return [...head, "Noch keine Förderpriorität ausgewählt."].join("\n");
+  }
+  const blocks = priorities.flatMap((row, index) => {
+    const report = reportForRow(state, row);
+    return [
+      `${index + 1}. ${row.areaLabel} · ${row.subareaLabel}`,
+      `App-Einordnung: ${row.rating === "nb" ? "n. b." : row.rating}`,
+      `Ist-Stand: ${report.stand}`,
+      `Nächstes Ziel: ${report.goal}`,
+      `Maßnahmen und Evaluation: ${report.measures}`,
+      `Belege aus: ${row.sources.slice(0, 4).join("; ")}`,
+      ""
+    ];
+  });
+  return [...head, ...blocks, "Hinweis: Pädagogische Arbeitsgrundlage, keine Diagnose und keine standardisierte Testauswertung."].join("\n");
+}
+
+function mapCodeToRating(code) {
+  return codeMap.get(code)?.appRating || "nb";
+}
+
+
+const STORAGE_KEY = "screeningKompass:case:v1";
+let memoryState = null;
+
+function createEmptyState() {
+  return {
+    schemaVersion: 1,
+    caseData: {
+      label: "",
+      className: "",
+      schoolYear: "",
+      languages: "",
+      period: "",
+      question: "",
+      strengths: ""
+    },
+    selectedModules: ["V2", "V3", "D2", "M2"],
+    responses: {},
+    manualRatings: {},
+    priorities: [],
+    reportEdits: {},
+    selectedPrintSheets: [],
+    printSelectionInitialized: false,
+    activeProfileKey: "",
+    currentModuleId: "V3",
+    currentItemIndex: 0,
+    savedAt: ""
+  };
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return memoryState || createEmptyState();
+    const parsed = JSON.parse(raw);
+    return { ...createEmptyState(), ...parsed, caseData: { ...createEmptyState().caseData, ...(parsed.caseData || {}) } };
+  } catch {
+    return memoryState || createEmptyState();
+  }
+}
+
+function saveState(state) {
+  const next = { ...state, savedAt: new Date().toISOString() };
+  memoryState = next;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // Manche Browser sperren lokale Speicherung bei direkt geöffneten HTML-Dateien.
+    // In diesem Fall bleibt der Fall für die aktuelle Sitzung im Arbeitsspeicher.
+  }
+  return next;
+}
+
+function resetState() {
+  memoryState = null;
+  try { localStorage.removeItem(STORAGE_KEY); } catch { /* Sitzungsspeicher ist bereits geleert. */ }
+  return createEmptyState();
+}
+
+function exportBackup(state) {
+  const safeLabel = (state.caseData.label || "fall").replace(/[^a-z0-9äöüß_-]+/gi, "-").replace(/^-|-$/g, "") || "fall";
+  const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), app: "Screening-Kompass", data: state }, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `screening-kompass-${safeLabel}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+async function importBackup(file) {
+  const text = await file.text();
+  const parsed = JSON.parse(text);
+  const data = parsed.data || parsed;
+  if (!data || data.schemaVersion !== 1 || typeof data.responses !== "object") {
+    throw new Error("Die Sicherungsdatei gehört nicht zu dieser App-Version.");
+  }
+  const next = { ...createEmptyState(), ...data, caseData: { ...createEmptyState().caseData, ...(data.caseData || {}) } };
+  return saveState(next);
+}
+
+
+
+
+
+const app = document.querySelector("#app");
+const toast = document.querySelector("#toast");
+const navItems = [
+  ["fall", "Fall"],
+  ["modules", "Module"],
+  ["material", "Aufgaben"],
+  ["observe", "Beobachten"],
+  ["evaluate", "Auswerten"],
+  ["plan", "Förderplan"]
+];
+
+let state = loadState();
+let currentView = state.caseData.label ? "observe" : "fall";
+let areaFilter = "all";
+
+function escapeHtml(value = "") {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function icon(name, size = 20) {
+  const paths = {
+    folder: '<path d="M3 7h6l2 2h10v10H3z"/><path d="M3 7V5h7l2 2"/>',
+    grid: '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>',
+    eye: '<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/>',
+    bars: '<path d="M5 20V11M12 20V4M19 20V8"/>',
+    doc: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+    check: '<path d="m5 12 4 4L19 6"/>',
+    chevron: '<path d="m9 18 6-6-6-6"/>',
+    arrowLeft: '<path d="m15 18-6-6 6-6"/><path d="M9 12h11"/>',
+    arrowRight: '<path d="m9 18 6-6-6-6"/><path d="M4 12h11"/>',
+    star: '<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9z"/>',
+    save: '<path d="M5 3h12l2 2v16H5z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/>',
+    download: '<path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 21h16"/>',
+    upload: '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 21h16"/>',
+    print: '<path d="M7 9V3h10v6M7 18H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M7 14h10v7H7z"/><path d="M17 12h.01"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/>'
+  };
+  return `<svg class="icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || paths.info}</svg>`;
+}
+
+function persist({ rerender = false } = {}) {
+  state = saveState(state);
+  updateSaveStatus();
+  if (rerender) render();
+}
+
+function updateSaveStatus() {
+  const element = document.querySelector("[data-save-status]");
+  if (element) element.innerHTML = `${icon("check", 16)} Lokal gespeichert`;
+}
+
+function showToast(message) {
+  toast.textContent = message;
+  toast.classList.add("is-visible");
+  window.clearTimeout(showToast.timer);
+  showToast.timer = window.setTimeout(() => toast.classList.remove("is-visible"), 2600);
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return;
+  } catch {
+    const helper = document.createElement("textarea");
+    helper.value = text;
+    helper.setAttribute("readonly", "");
+    helper.style.position = "fixed";
+    helper.style.opacity = "0";
+    document.body.appendChild(helper);
+    helper.select();
+    const copied = document.execCommand("copy");
+    helper.remove();
+    if (!copied) throw new Error("Kopieren nicht verfügbar");
+  }
+}
+
+async function waitForPrintImages() {
+  const images = [...document.querySelectorAll(".print-sheet-page img")];
+  const results = await Promise.all(images.map((image) => {
+    if (image.complete) return Promise.resolve(image.naturalWidth > 0);
+    return new Promise((resolve) => {
+      image.addEventListener("load", () => resolve(true), { once: true });
+      image.addEventListener("error", () => resolve(false), { once: true });
+    });
+  }));
+  return results.every(Boolean);
+}
+
+function header() {
+  const primary = currentView === "observe"
+    ? ["evaluate", "Auswertung öffnen"]
+    : currentView === "evaluate"
+      ? ["plan", "Förderplan vorbereiten"]
+      : currentView === "plan"
+        ? ["print", "Bericht drucken / PDF"]
+        : currentView === "material"
+          ? ["observe", "Beobachtung starten"]
+          : [currentView === "fall" ? "modules" : "material", currentView === "fall" ? "Module auswählen" : "Aufgaben auswählen"];
+  const navIcons = { fall: "folder", modules: "grid", material: "print", observe: "eye", evaluate: "bars", plan: "doc" };
+  return `
+    <header class="app-header no-print">
+      <button class="brand" data-action="nav" data-view="fall" aria-label="Zur Fallübersicht">
+        <span class="brand-mark"><span></span><span></span><span></span></span>
+        <span>Screening-Kompass</span>
+      </button>
+      <nav class="workflow-nav" aria-label="Arbeitsschritte">
+        ${navItems.map(([id, label]) => `
+          <button class="workflow-link ${currentView === id ? "is-active" : ""}" data-action="nav" data-view="${id}">
+            ${icon(navIcons[id], 19)}<span>${label}</span>
+          </button>
+        `).join("")}
+      </nav>
+      <div class="header-actions">
+        <span class="save-status" data-save-status>${icon("check", 16)} Lokal gespeichert</span>
+        <button class="button button-primary" data-action="${primary[0] === "print" ? "print" : "nav"}" ${primary[0] === "print" ? "" : `data-view="${primary[0]}"`}>
+          ${primary[1]} ${primary[0] === "print" ? icon("doc", 17) : icon("arrowRight", 17)}
+        </button>
+      </div>
+    </header>
+  `;
+}
+
+function field(label, name, value, options = {}) {
+  const multiline = options.multiline;
+  return `
+    <label class="field ${options.wide ? "field-wide" : ""}">
+      <span>${label}</span>
+      ${multiline
+        ? `<textarea data-case-field="${name}" rows="${options.rows || 3}" placeholder="${escapeHtml(options.placeholder || "")}">${escapeHtml(value)}</textarea>`
+        : `<input data-case-field="${name}" value="${escapeHtml(value)}" placeholder="${escapeHtml(options.placeholder || "")}" autocomplete="off" />`}
+    </label>
+  `;
+}
+
+function fallView() {
+  const data = state.caseData;
+  return `
+    <main class="simple-page">
+      <section class="page-heading">
+        <div>
+          <h1>Fall anlegen</h1>
+          <p>Nur die Angaben erfassen, die für Durchführung und Förderung notwendig sind.</p>
+        </div>
+        <button class="button button-secondary" data-action="new-case">${icon("plus", 17)} Neuer Fall</button>
+      </section>
+      <div class="case-layout">
+        <section class="form-surface" aria-labelledby="case-title">
+          <h2 id="case-title">Angaben zum Screening</h2>
+          <div class="form-grid">
+            ${field("Kind / Kürzel", "label", data.label, { placeholder: "z. B. Kind A oder Kürzel" })}
+            ${field("Klasse", "className", data.className, { placeholder: "z. B. Klasse 2" })}
+            ${field("Schulbesuchsjahr", "schoolYear", data.schoolYear, { placeholder: "z. B. 2. Schulbesuchsjahr" })}
+            ${field("Zeitraum", "period", data.period, { placeholder: "z. B. 02.–13.09.2026" })}
+            ${field("Familiensprache(n) / Beschulung", "languages", data.languages, { wide: true, placeholder: "nur wenn für die Einordnung relevant" })}
+            ${field("Anlass und aktuelle Fragestellung", "question", data.question, { wide: true, multiline: true, rows: 3, placeholder: "Was soll durch das Screening genauer geklärt werden?" })}
+            ${field("Stärken, Interessen und Gelingensbedingungen", "strengths", data.strengths, { wide: true, multiline: true, rows: 3, placeholder: "Was gelingt bereits? Wodurch wird Mitarbeit wahrscheinlicher?" })}
+          </div>
+          <div class="form-actions">
+            <button class="button button-primary" data-action="nav" data-view="modules">Module auswählen ${icon("arrowRight", 17)}</button>
+          </div>
+        </section>
+        <aside class="guidance-panel">
+          <h2>Arbeitsweise</h2>
+          <ol class="plain-steps">
+            <li><span>1</span><p>Fragestellung festlegen und nur passende Module auswählen.</p></li>
+            <li><span>2</span><p>Leistung, Hilfe, Lernreaktion und Situation getrennt dokumentieren.</p></li>
+            <li><span>3</span><p>Höchstens drei belegte Förderprioritäten übernehmen.</p></li>
+          </ol>
+          <div class="notice notice-yellow">
+            ${icon("info", 19)}
+            <p><strong>Keine Diagnose.</strong> Das Tool ordnet Beobachtungen, ersetzt aber weder standardisierte Tests noch medizinische oder sonderpädagogische Diagnostik.</p>
+          </div>
+          <div class="data-actions">
+            <button class="button button-quiet" data-action="export">${icon("download", 17)} Sicherung exportieren</button>
+            <button class="button button-quiet" data-action="open-import">${icon("upload", 17)} Sicherung importieren</button>
+            <input class="visually-hidden" id="backup-import" type="file" accept="application/json,.json" />
+          </div>
+        </aside>
+      </div>
+    </main>
+  `;
+}
+
+function modulesView() {
+  const selected = new Set(state.selectedModules);
+  const totalItems = MODULES.filter((module) => selected.has(module.id)).reduce((sum, module) => sum + module.items.length, 0);
+  return `
+    <main class="simple-page module-page">
+      <section class="page-heading">
+        <div>
+          <h1>Module auswählen</h1>
+          <p>Wähle nur die Bereiche aus, die zur aktuellen Fragestellung beitragen.</p>
+        </div>
+        <button class="button button-primary" data-action="nav" data-view="material">Aufgaben auswählen ${icon("arrowRight", 17)}</button>
+      </section>
+      <div class="module-selection-layout">
+        <div class="module-groups">
+          ${MODULE_GROUPS.map((group) => {
+            const modules = MODULES.filter((module) => module.group === group);
+            return `
+              <section class="module-group">
+                <div class="section-title-line"><h2>${group}</h2><span>${modules.filter((module) => selected.has(module.id)).length} ausgewählt</span></div>
+                <div class="module-list">
+                  ${modules.map((module) => `
+                    <label class="module-choice ${selected.has(module.id) ? "is-selected" : ""}">
+                      <input type="checkbox" data-module-toggle="${module.id}" ${selected.has(module.id) ? "checked" : ""} />
+                      <span class="choice-check">${selected.has(module.id) ? icon("check", 15) : ""}</span>
+                      <span class="module-code">${module.id}</span>
+                      <span class="module-copy"><strong>${module.title}</strong><small>${module.description}</small></span>
+                      <span class="module-count">${module.items.length} Beobachtungen</span>
+                    </label>
+                  `).join("")}
+                </div>
+              </section>
+            `;
+          }).join("")}
+        </div>
+        <aside class="selection-summary">
+          <h2>Deine Auswahl</h2>
+          <div class="summary-number"><strong>${selected.size}</strong><span>Module</span></div>
+          <div class="summary-number"><strong>${totalItems}</strong><span>Beobachtungen</span></div>
+          <p>Du kannst die Auswahl jederzeit ergänzen. Bereits eingetragene Ergebnisse bleiben erhalten.</p>
+          <button class="button button-primary button-block" data-action="nav" data-view="material">Aufgaben auswählen</button>
+        </aside>
+      </div>
+    </main>
+  `;
+}
+
+const PRINT_KIND_ORDER = [
+  "Aufgaben- und Beobachtungsbogen",
+  "Lesematerial",
+  "Arbeitsmaterial",
+  "Ausschneidematerial",
+  "Zusatzbogen",
+  "Lösung und Auswertung"
+];
+
+function ensurePrintSelection() {
+  const relevant = printSheetsForModules(state.selectedModules);
+  const relevantIds = new Set(relevant.map((entry) => entry.id));
+  let changed = false;
+  if (!state.printSelectionInitialized) {
+    state.selectedPrintSheets = relevant.filter((entry) => entry.recommended).map((entry) => entry.id);
+    state.printSelectionInitialized = true;
+    changed = true;
+  } else {
+    const cleaned = (state.selectedPrintSheets || []).filter((id) => relevantIds.has(id));
+    if (cleaned.length !== (state.selectedPrintSheets || []).length) {
+      state.selectedPrintSheets = cleaned;
+      changed = true;
+    }
+  }
+  if (changed) state = saveState(state);
+  return relevant;
+}
+
+function sheetModuleLabels(entry) {
+  return entry.moduleIds
+    .filter((id) => state.selectedModules.includes(id))
+    .map((id) => `${id} · ${moduleById(id)?.title || id}`)
+    .join(" · ");
+}
+
+function materialView() {
+  if (!state.selectedModules.length) {
+    return `<main class="empty-state"><h1>Noch keine Module ausgewählt</h1><p>Wähle zuerst die passenden Screeningmodule aus.</p><button class="button button-primary" data-action="nav" data-view="modules">Module auswählen</button></main>`;
+  }
+  const relevant = ensurePrintSelection();
+  const selected = new Set(state.selectedPrintSheets || []);
+  const selectedCount = relevant.filter((entry) => selected.has(entry.id)).length;
+  return `
+    <main class="simple-page materials-page">
+      <section class="page-heading">
+        <div>
+          <h1>Aufgaben und Material auswählen</h1>
+          <p>Passend zu den gewählten Modulen werden die Originalseiten aus dem Screening-Baukasten angeboten.</p>
+        </div>
+        <button class="button button-primary" data-action="print-materials" ${selectedCount ? "" : "disabled"}>${icon("print", 17)} ${selectedCount} Seiten drucken</button>
+      </section>
+      <section class="material-summary">
+        <div><strong>${state.selectedModules.length}</strong><span>ausgewählte Module</span></div>
+        <div><strong>${relevant.length}</strong><span>passende PDF-Seiten</span></div>
+        <div><strong>${selectedCount}</strong><span>für den Druck ausgewählt</span></div>
+        <div class="material-summary-actions">
+          <button class="button button-secondary" data-action="select-recommended-sheets">Empfohlene Seiten auswählen</button>
+          <button class="button button-quiet" data-action="clear-print-sheets">Auswahl leeren</button>
+        </div>
+      </section>
+      <div class="material-groups">
+        ${PRINT_KIND_ORDER.map((kind) => {
+          const sheets = relevant.filter((entry) => entry.kind === kind);
+          if (!sheets.length) return "";
+          return `<section class="material-group">
+            <div class="section-title-line"><h2>${kind}</h2><span>${sheets.filter((entry) => selected.has(entry.id)).length} von ${sheets.length} ausgewählt</span></div>
+            <div class="print-sheet-grid">
+              ${sheets.map((entry) => `<label class="print-sheet-choice ${selected.has(entry.id) ? "is-selected" : ""}">
+                <input type="checkbox" data-print-sheet="${entry.id}" ${selected.has(entry.id) ? "checked" : ""} />
+                <span class="sheet-preview"><img src="${entry.image}" alt="Vorschau: ${escapeHtml(entry.title)}" loading="lazy" /></span>
+                <span class="sheet-copy">
+                  <span class="sheet-meta"><strong>${entry.code}</strong><small>PDF-Seite ${entry.page}</small></span>
+                  <strong>${entry.title}</strong>
+                  <small>${escapeHtml(sheetModuleLabels(entry))}</small>
+                </span>
+                <span class="choice-check">${selected.has(entry.id) ? icon("check", 15) : ""}</span>
+              </label>`).join("")}
+            </div>
+          </section>`;
+        }).join("")}
+      </div>
+      <section class="material-bottom-actions">
+        <button class="button button-secondary" data-action="nav" data-view="modules">${icon("arrowLeft", 17)} Module ändern</button>
+        <button class="button button-primary" data-action="print-materials" ${selectedCount ? "" : "disabled"}>${icon("print", 17)} Ausgewählte Seiten drucken</button>
+        <button class="button button-secondary" data-action="nav" data-view="observe">Beobachtung starten ${icon("arrowRight", 17)}</button>
+      </section>
+    </main>
+  `;
+}
+
+function printMaterialsView() {
+  const selected = new Set(state.selectedPrintSheets || []);
+  const sheets = printSheetsForModules(state.selectedModules).filter((entry) => selected.has(entry.id));
+  return `
+    <main class="material-print-page">
+      <section class="print-material-toolbar no-print">
+        <div><h1>Druckvorschau</h1><p>${sheets.length} ausgewählte Seiten aus dem Screening-Baukasten</p></div>
+        <div>
+          <button class="button button-secondary" data-action="close-material-print">${icon("arrowLeft", 17)} Auswahl ändern</button>
+          <button class="button button-primary" data-action="print-materials-again">${icon("print", 17)} Drucken</button>
+        </div>
+      </section>
+      <section class="print-sheet-stack">
+        ${sheets.map((entry) => `<article class="print-sheet-page"><img src="${entry.image}" alt="${escapeHtml(entry.code)}: ${escapeHtml(entry.title)}" /></article>`).join("")}
+      </section>
+    </main>
+  `;
+}
+
+function moduleRail(currentModule) {
+  return `
+    <aside class="module-rail no-print">
+      <div class="rail-heading"><strong>Ausgewählte Module</strong><button class="icon-button" data-action="nav" data-view="modules" aria-label="Modulauswahl ändern">${icon("grid", 18)}</button></div>
+      ${MODULE_GROUPS.map((group) => {
+        const modules = MODULES.filter((module) => module.group === group && state.selectedModules.includes(module.id));
+        if (!modules.length) return "";
+        return `
+          <section class="rail-group">
+            <h3>${group}</h3>
+            ${modules.map((module) => {
+              const progress = progressForModule(state, module);
+              return `<button class="rail-module ${module.id === currentModule.id ? "is-active" : ""}" data-action="select-module" data-module="${module.id}">
+                <span>${module.id}</span><span class="rail-module-title">${module.title}</span><span class="rail-status ${progress.complete ? "is-complete" : ""}">${progress.complete ? icon("check", 13) : `${progress.answered}/${progress.total}`}</span>
+              </button>`;
+            }).join("")}
+          </section>
+        `;
+      }).join("")}
+    </aside>
+  `;
+}
+
+function evidenceButtons(moduleId, observation, currentCode) {
+  return `<div class="evidence-control" role="group" aria-label="Beobachtungscode für ${escapeHtml(observation.text)}">
+    ${EVIDENCE_CODES.map((code) => `<button class="evidence-button ${currentCode === code.value ? "is-selected" : ""}" title="${escapeHtml(code.label)}" data-action="set-code" data-module="${moduleId}" data-item="${observation.id}" data-code="${code.value}">${code.short}</button>`).join("")}
+  </div>`;
+}
+
+function observeView() {
+  const selected = MODULES.filter((module) => state.selectedModules.includes(module.id));
+  if (!selected.length) {
+    return `<main class="empty-state"><h1>Noch keine Module ausgewählt</h1><p>Wähle zunächst die passenden Screeningmodule aus.</p><button class="button button-primary" data-action="nav" data-view="modules">Module auswählen</button></main>`;
+  }
+  let currentModule = moduleById(state.currentModuleId);
+  if (!currentModule || !state.selectedModules.includes(currentModule.id)) {
+    currentModule = selected[0];
+    state.currentModuleId = currentModule.id;
+  }
+  const index = Math.min(Math.max(state.currentItemIndex || 0, 0), currentModule.items.length - 1);
+  const activeItem = currentModule.items[index];
+  const activeKey = responseKey(currentModule.id, activeItem.id);
+  const activeResponse = state.responses[activeKey] || {};
+  const profile = buildProfile(state);
+  const activeMappings = activeItem.mappings.map((mapping) => ({
+    ...mapping,
+    key: profileKey(mapping.areaId, mapping.subareaId),
+    area: areaById(mapping.areaId)?.label || mapping.areaId,
+    subarea: subareaLabel(mapping.areaId, mapping.subareaId),
+    row: profile.find((entry) => entry.key === profileKey(mapping.areaId, mapping.subareaId))
+  }));
+  const moduleProgress = progressForModule(state, currentModule);
+  return `
+    <main class="workspace observe-workspace">
+      ${moduleRail(currentModule)}
+      <section class="workspace-main">
+        <div class="workspace-title">
+          <div><h1>${currentModule.id} · ${currentModule.title}</h1><p>${currentModule.description}</p></div>
+          <span>${moduleProgress.answered} von ${moduleProgress.total} dokumentiert</span>
+        </div>
+        <div class="observation-table" role="table" aria-label="Beobachtungsaspekte">
+          <div class="observation-head" role="row"><span>Nr.</span><span>Beobachtungsaspekt</span><span>Evidenz</span></div>
+          ${currentModule.items.map((observation, itemIndex) => {
+            const key = responseKey(currentModule.id, observation.id);
+            const response = state.responses[key] || {};
+            const active = itemIndex === index;
+            return `
+              <div class="observation-row ${active ? "is-active" : ""}" role="row" data-action="select-item" data-index="${itemIndex}">
+                <span class="observation-number">${itemIndex + 1}</span>
+                <strong>${observation.text}</strong>
+                ${evidenceButtons(currentModule.id, observation, response.code)}
+              </div>
+              ${active ? `
+                <div class="observation-detail">
+                  <label class="field field-wide"><span>Konkreter Beleg</span><textarea rows="4" data-response-field="evidence" data-response-key="${activeKey}" placeholder="Was war konkret zu sehen oder zu hören?">${escapeHtml(activeResponse.evidence || "")}</textarea></label>
+                  <div class="detail-grid">
+                    <label class="field"><span>Hilfreiche Unterstützung</span><input data-response-field="support" data-response-key="${activeKey}" value="${escapeHtml(activeResponse.support || "")}" placeholder="z. B. visuelles Beispiel, Wahlmöglichkeit" /></label>
+                    <label class="field"><span>Situation / Tagesform</span><input data-response-field="context" data-response-key="${activeKey}" value="${escapeHtml(activeResponse.context || "")}" placeholder="z. B. Einzelarbeit, ausgeruht" /></label>
+                  </div>
+                </div>
+              ` : ""}
+            `;
+          }).join("")}
+        </div>
+      </section>
+      <aside class="inspector no-print">
+        <div class="inspector-heading"><h2>Zuordnung zum FörderKompass</h2>${icon("info", 18)}</div>
+        <div class="notice notice-yellow compact">${icon("info", 17)}<p>Vorschlag – bitte fachlich prüfen</p></div>
+        ${activeMappings.map((mapping) => `
+          <section class="mapping-block">
+            <h3>${mapping.area}</h3>
+            <p>${mapping.subarea}</p>
+            <span class="mapping-result">${activeResponse.code ? `Beobachtungscode ${activeResponse.code} → ${mapping.row?.rating === "nb" ? "n. b." : mapping.row?.rating || "offen"}` : "Noch kein Beobachtungscode"}</span>
+          </section>
+        `).join("")}
+        <button class="button button-secondary button-block" data-action="toggle-priority" data-profile="${activeMappings[0]?.key || ""}" ${!activeResponse.code ? "disabled" : ""}>
+          ${icon("star", 17)} ${activeMappings[0]?.row?.isPriority ? "Priorität entfernen" : "Als Priorität vormerken"}
+        </button>
+        <div class="code-legend">
+          <h3>Beobachtungscode</h3>
+          ${EVIDENCE_CODES.map((code) => `<p><strong>${code.short}</strong><span>${code.label}</span></p>`).join("")}
+        </div>
+      </aside>
+      <footer class="workspace-footer no-print">
+        <button class="button button-secondary" data-action="previous-item" ${index === 0 ? "disabled" : ""}>${icon("arrowLeft", 17)} Vorherige Aufgabe</button>
+        <div class="progress-track" aria-label="Fortschritt"><span>${index + 1} von ${currentModule.items.length}</span><div><i style="width:${((index + 1) / currentModule.items.length) * 100}%"></i></div></div>
+        <button class="button button-primary" data-action="next-item">${index === currentModule.items.length - 1 ? "Nächstes Modul" : "Nächste Aufgabe"} ${icon("arrowRight", 17)}</button>
+      </footer>
+    </main>
+  `;
+}
+
+function profileRatingSelect(row) {
+  return `<select class="rating-select rating-${row.rating.replace("+", "plus")}" data-profile-rating="${row.key}" aria-label="App-Einordnung für ${escapeHtml(row.subareaLabel)}">
+    ${APP_RATINGS.map((rating) => `<option value="${rating.value}" ${row.rating === rating.value ? "selected" : ""}>${rating.value === "nb" ? "n. b." : rating.value}</option>`).join("")}
+  </select>`;
+}
+
+function evaluateView() {
+  const profile = buildProfile(state);
+  const filtered = areaFilter === "all" ? profile : profile.filter((row) => row.areaId === areaFilter);
+  let active = profile.find((row) => row.key === state.activeProfileKey) || profile.find((row) => row.rating === "-") || profile[0];
+  if (active && state.activeProfileKey !== active.key) state.activeProfileKey = active.key;
+  const report = active ? reportForRow(state, active) : null;
+  return `
+    <main class="workspace evaluate-workspace">
+      <aside class="area-rail no-print">
+        <div class="rail-heading"><strong>Förderbereiche</strong></div>
+        <button class="area-filter ${areaFilter === "all" ? "is-active" : ""}" data-action="filter-area" data-area="all"><span>Alle Beobachtungen</span><strong>${profile.length}</strong></button>
+        ${AREAS.map((area) => {
+          const counts = progressForArea(profile, area.id);
+          return `<button class="area-filter ${areaFilter === area.id ? "is-active" : ""}" data-action="filter-area" data-area="${area.id}"><span>${area.label}</span><strong>${counts.observed}</strong>${icon("chevron", 14)}</button>`;
+        }).join("")}
+      </aside>
+      <section class="workspace-main">
+        <div class="workspace-title"><div><h1>Auswertung</h1><p>Beobachtungen zusammenführen, Belege prüfen und höchstens drei Prioritäten wählen.</p></div><span>${state.priorities.length} von 3 Prioritäten</span></div>
+        <div class="profile-heading"><h2>Beobachtungsprofil</h2><p>Die Einordnung ist ein Vorschlag aus den dokumentierten Hilfebedingungen und kann geändert werden.</p></div>
+        ${filtered.length ? `
+          <div class="profile-table">
+            <div class="profile-head"><span>Förderbereich</span><span>Unterbereich</span><span>Ergebnis</span><span>Konkreter Beleg</span><span>Priorität</span></div>
+            ${filtered.map((row) => `
+              <div class="profile-row ${active?.key === row.key ? "is-active" : ""}" data-action="select-profile" data-profile="${row.key}">
+                <span>${row.areaLabel}</span>
+                <strong>${row.subareaLabel}</strong>
+                <span>${profileRatingSelect(row)}</span>
+                <span class="evidence-summary">${escapeHtml(row.evidence[0] || row.sources[0] || "Noch kein konkreter Beleg notiert.")}</span>
+                <button class="priority-button ${row.isPriority ? "is-active" : ""}" data-action="toggle-priority" data-profile="${row.key}" aria-label="Priorität umschalten">${icon("star", 17)}</button>
+              </div>
+            `).join("")}
+          </div>
+        ` : `<div class="empty-inline"><h2>Noch keine Auswertung möglich</h2><p>Trage zunächst mindestens einen Beobachtungscode ein.</p><button class="button button-primary" data-action="nav" data-view="observe">Zur Beobachtung</button></div>`}
+      </section>
+      <aside class="inspector report-inspector no-print">
+        <div class="inspector-heading"><h2>Förderplan-Vorschlag</h2>${icon("info", 18)}</div>
+        ${active && report ? `
+          <p class="active-profile-label">${active.areaLabel}<br /><strong>${active.subareaLabel}</strong></p>
+          <label class="field field-wide"><span>Ist-Stand</span><textarea rows="5" data-report-field="stand" data-profile="${active.key}">${escapeHtml(report.stand)}</textarea></label>
+          <label class="field field-wide"><span>Nächstes Ziel</span><textarea rows="5" data-report-field="goal" data-profile="${active.key}">${escapeHtml(report.goal)}</textarea></label>
+          <label class="field field-wide"><span>Maßnahmen und Evaluation</span><textarea rows="6" data-report-field="measures" data-profile="${active.key}">${escapeHtml(report.measures)}</textarea></label>
+          <div class="notice notice-yellow compact">${icon("info", 17)}<p>Keine Diagnose · Vorschlag fachlich prüfen</p></div>
+          <button class="button button-secondary button-block" data-action="toggle-priority" data-profile="${active.key}">${icon("star", 17)} ${active.isPriority ? "Priorität entfernen" : "Priorität übernehmen"}</button>
+          <button class="button button-primary button-block" data-action="nav" data-view="plan">${icon("doc", 17)} Bericht erstellen</button>
+        ` : `<p class="muted">Wähle eine ausgewertete Beobachtung aus.</p>`}
+      </aside>
+      <footer class="workspace-footer no-print">
+        <button class="button button-secondary" data-action="nav" data-view="observe">${icon("arrowLeft", 17)} Zurück zur Beobachtung</button>
+        <span></span>
+        <button class="button button-primary" data-action="nav" data-view="plan">Förderplan vorbereiten ${icon("arrowRight", 17)}</button>
+      </footer>
+    </main>
+  `;
+}
+
+function planView() {
+  const profile = buildProfile(state);
+  const priorities = state.priorities.map((key) => profile.find((row) => row.key === key)).filter(Boolean).slice(0, 3);
+  const transferText = buildTransferText(state, profile);
+  return `
+    <main class="report-page">
+      <section class="report-toolbar no-print">
+        <div><h1>Förderplan vorbereiten</h1><p>Die bestätigten Prioritäten als Arbeitsgrundlage übertragen.</p></div>
+        <div class="toolbar-actions">
+          <button class="button button-secondary" data-action="copy-report">Bericht kopieren</button>
+          <button class="button button-primary" data-action="print">${icon("doc", 17)} Drucken / als PDF sichern</button>
+        </div>
+      </section>
+      <article class="print-report">
+        <header class="report-title">
+          <div><span>SCREENING-KOMPASS</span><h1>Übertragung zum FörderKompass</h1></div>
+          <p>Pädagogische Arbeitsgrundlage · keine Diagnose</p>
+        </header>
+        <section class="report-meta">
+          <p><span>Kind / Kürzel</span><strong>${escapeHtml(state.caseData.label || "—")}</strong></p>
+          <p><span>Klasse / Schuljahr</span><strong>${escapeHtml([state.caseData.className, state.caseData.schoolYear].filter(Boolean).join(" · ") || "—")}</strong></p>
+          <p><span>Zeitraum</span><strong>${escapeHtml(state.caseData.period || "—")}</strong></p>
+        </section>
+        <section class="report-context"><h2>Fragestellung</h2><p>${escapeHtml(state.caseData.question || "Noch nicht eingetragen.")}</p><h2>Stärken und Gelingensbedingungen</h2><p>${escapeHtml(state.caseData.strengths || "Noch nicht eingetragen.")}</p></section>
+        ${priorities.length ? priorities.map((row, index) => {
+          const report = reportForRow(state, row);
+          return `<section class="priority-report">
+            <div class="priority-report-head"><span>Priorität ${index + 1}</span><h2>${row.areaLabel}</h2><p>${row.subareaLabel} · Einordnung ${row.rating === "nb" ? "n. b." : row.rating}</p></div>
+            <div class="report-section"><h3>Ist-Stand</h3><p>${escapeHtml(report.stand)}</p></div>
+            <div class="report-section"><h3>Nächstes Ziel</h3><p>${escapeHtml(report.goal)}</p></div>
+            <div class="report-section"><h3>Maßnahmen und Evaluation</h3><p>${escapeHtml(report.measures)}</p></div>
+            <div class="report-sources"><strong>Belege:</strong> ${escapeHtml(row.sources.slice(0, 4).join("; "))}</div>
+          </section>`;
+        }).join("") : `<section class="empty-report"><h2>Noch keine Priorität ausgewählt</h2><p>Gehe zurück zur Auswertung und übernimm höchstens drei belegte Schwerpunkte.</p></section>`}
+        <footer class="report-note">Die Zuordnung beruht auf pädagogischen Beobachtungen und dokumentierten Hilfebedingungen. Sie ersetzt keine standardisierte, medizinische oder sonderpädagogische Diagnostik.</footer>
+      </article>
+      <section class="transfer-copy no-print"><h2>Textübertragung</h2><textarea readonly rows="14">${escapeHtml(transferText)}</textarea><div><button class="button button-secondary" data-action="copy-report">In Zwischenablage kopieren</button><button class="button button-quiet" data-action="export">${icon("download", 17)} Sicherung exportieren</button></div></section>
+    </main>
+  `;
+}
+
+function render() {
+  const views = { fall: fallView, modules: modulesView, material: materialView, printmaterials: printMaterialsView, observe: observeView, evaluate: evaluateView, plan: planView };
+  const content = (views[currentView] || fallView)();
+  app.innerHTML = currentView === "printmaterials" ? content : `${header()}${content}`;
+  document.body.dataset.view = currentView;
+}
+
+function nextObservation(direction) {
+  const selected = MODULES.filter((module) => state.selectedModules.includes(module.id));
+  const current = moduleById(state.currentModuleId) || selected[0];
+  if (!current) return;
+  let itemIndex = state.currentItemIndex || 0;
+  if (direction < 0 && itemIndex > 0) itemIndex -= 1;
+  if (direction > 0 && itemIndex < current.items.length - 1) itemIndex += 1;
+  else if (direction > 0 && itemIndex === current.items.length - 1) {
+    const moduleIndex = selected.findIndex((module) => module.id === current.id);
+    const nextModule = selected[moduleIndex + 1] || selected[0];
+    state.currentModuleId = nextModule.id;
+    itemIndex = 0;
+  }
+  state.currentItemIndex = itemIndex;
+  persist({ rerender: true });
+}
+
+function togglePriority(key) {
+  if (!key) return;
+  if (state.priorities.includes(key)) {
+    state.priorities = state.priorities.filter((entry) => entry !== key);
+  } else {
+    if (state.priorities.length >= 3) {
+      showToast("Es können höchstens drei Förderprioritäten ausgewählt werden.");
+      return;
+    }
+    state.priorities = [...state.priorities, key];
+  }
+  persist({ rerender: true });
+}
+
+app.addEventListener("click", async (event) => {
+  const target = event.target.closest("[data-action]");
+  if (!target) return;
+  const action = target.dataset.action;
+  if (action === "nav") {
+    currentView = target.dataset.view;
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  if (action === "new-case") {
+    if (!window.confirm("Aktuellen Fall wirklich leeren? Exportiere vorher bei Bedarf eine Sicherung.")) return;
+    state = resetState();
+    currentView = "fall";
+    render();
+  }
+  if (action === "select-module") {
+    state.currentModuleId = target.dataset.module;
+    state.currentItemIndex = 0;
+    persist({ rerender: true });
+  }
+  if (action === "select-item") {
+    if (event.target.closest(".evidence-control")) return;
+    state.currentItemIndex = Number(target.dataset.index);
+    persist({ rerender: true });
+  }
+  if (action === "set-code") {
+    event.stopPropagation();
+    const key = responseKey(target.dataset.module, target.dataset.item);
+    state.responses[key] = { ...(state.responses[key] || {}), code: target.dataset.code };
+    const module = moduleById(target.dataset.module);
+    state.currentItemIndex = module.items.findIndex((observation) => observation.id === target.dataset.item);
+    persist({ rerender: true });
+  }
+  if (action === "previous-item") nextObservation(-1);
+  if (action === "next-item") nextObservation(1);
+  if (action === "filter-area") {
+    areaFilter = target.dataset.area;
+    render();
+  }
+  if (action === "select-recommended-sheets") {
+    state.selectedPrintSheets = printSheetsForModules(state.selectedModules).filter((entry) => entry.recommended).map((entry) => entry.id);
+    state.printSelectionInitialized = true;
+    persist({ rerender: true });
+  }
+  if (action === "clear-print-sheets") {
+    state.selectedPrintSheets = [];
+    state.printSelectionInitialized = true;
+    persist({ rerender: true });
+  }
+  if (action === "print-materials") {
+    if (!(state.selectedPrintSheets || []).length) {
+      showToast("Wähle zunächst mindestens eine Aufgaben- oder Materialseite aus.");
+      return;
+    }
+    currentView = "printmaterials";
+    render();
+    const loaded = await waitForPrintImages();
+    if (!loaded) showToast("Mindestens eine Druckseite konnte nicht geladen werden.");
+    else window.print();
+  }
+  if (action === "print-materials-again") {
+    const loaded = await waitForPrintImages();
+    if (loaded) window.print();
+    else showToast("Mindestens eine Druckseite konnte nicht geladen werden.");
+  }
+  if (action === "close-material-print") {
+    currentView = "material";
+    render();
+  }
+  if (action === "select-profile") {
+    if (event.target.closest("select") || event.target.closest("button")) return;
+    state.activeProfileKey = target.dataset.profile;
+    persist({ rerender: true });
+  }
+  if (action === "toggle-priority") togglePriority(target.dataset.profile);
+  if (action === "print") window.print();
+  if (action === "copy-report") {
+    const text = buildTransferText(state, buildProfile(state));
+    try {
+      await copyText(text);
+      showToast("Bericht wurde in die Zwischenablage kopiert.");
+    } catch {
+      showToast("Kopieren ist hier nicht verfügbar. Bitte den Text im Feld markieren.");
+    }
+  }
+  if (action === "export") {
+    exportBackup(state);
+    showToast("Sicherung wurde heruntergeladen.");
+  }
+  if (action === "open-import") document.querySelector("#backup-import")?.click();
+});
+
+app.addEventListener("input", (event) => {
+  const caseField = event.target.dataset.caseField;
+  if (caseField) {
+    state.caseData[caseField] = event.target.value;
+    persist();
+  }
+  const responseField = event.target.dataset.responseField;
+  if (responseField) {
+    const key = event.target.dataset.responseKey;
+    state.responses[key] = { ...(state.responses[key] || {}), [responseField]: event.target.value };
+    persist();
+  }
+  const reportField = event.target.dataset.reportField;
+  if (reportField) {
+    const key = event.target.dataset.profile;
+    state.reportEdits[key] = { ...(state.reportEdits[key] || {}), [reportField]: event.target.value };
+    persist();
+  }
+});
+
+app.addEventListener("change", async (event) => {
+  const moduleId = event.target.dataset.moduleToggle;
+  if (moduleId) {
+    const wasSelected = state.selectedModules.includes(moduleId);
+    state.selectedModules = event.target.checked
+      ? [...new Set([...state.selectedModules, moduleId])]
+      : state.selectedModules.filter((id) => id !== moduleId);
+    if (state.printSelectionInitialized) {
+      if (event.target.checked && !wasSelected) {
+        const additions = PRINT_SHEETS.filter((entry) => entry.recommended && entry.moduleIds.includes(moduleId)).map((entry) => entry.id);
+        state.selectedPrintSheets = [...new Set([...(state.selectedPrintSheets || []), ...additions])];
+      } else if (!event.target.checked && wasSelected) {
+        const stillRelevant = new Set(printSheetsForModules(state.selectedModules).map((entry) => entry.id));
+        state.selectedPrintSheets = (state.selectedPrintSheets || []).filter((id) => stillRelevant.has(id));
+      }
+    }
+    if (!state.selectedModules.includes(state.currentModuleId)) state.currentModuleId = state.selectedModules[0] || "";
+    persist({ rerender: true });
+  }
+  const printSheetId = event.target.dataset.printSheet;
+  if (printSheetId) {
+    state.selectedPrintSheets = event.target.checked
+      ? [...new Set([...(state.selectedPrintSheets || []), printSheetId])]
+      : (state.selectedPrintSheets || []).filter((id) => id !== printSheetId);
+    state.printSelectionInitialized = true;
+    persist({ rerender: true });
+  }
+  const profileRating = event.target.dataset.profileRating;
+  if (profileRating) {
+    state.manualRatings[profileRating] = event.target.value;
+    state.activeProfileKey = profileRating;
+    persist({ rerender: true });
+  }
+  if (event.target.id === "backup-import" && event.target.files?.[0]) {
+    try {
+      state = await importBackup(event.target.files[0]);
+      currentView = "fall";
+      render();
+      showToast("Sicherung wurde erfolgreich geladen.");
+    } catch (error) {
+      showToast(error.message || "Die Sicherung konnte nicht geladen werden.");
+    }
+  }
+});
+
+render();
+
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js").catch(() => {}));
+}
+</script>
+  </body>
+</html>
