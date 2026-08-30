@@ -2,7 +2,7 @@ import { APP_RATINGS, AREAS, EVIDENCE_CODES, MODULE_GROUPS, MODULES, PRINT_SHEET
 import { COMPETENCIES, COMPETENCY_AREAS, COMPETENCY_BY_ID } from "./competencies.js";
 import { competencyIdsForObservation } from "./competency-links.js";
 import { buildCompetencyCoverage, buildProfile, buildTransferText, progressForArea, progressForModule, reportForRow } from "./report.js";
-import { HELP_LEVELS, OUTCOME_LEVELS, assessmentSpecFor, deriveObservationCode, documentationForObservation } from "./assessment.js";
+import { HELP_LEVELS, assessmentSpecFor, correctForObservation, deriveObservationCode, documentationForObservation, totalForObservation } from "./assessment.js";
 import { createEmptyState, exportBackup, importBackup, loadState, resetState, saveState } from "./storage.js";
 
 const app = document.querySelector("#app");
@@ -386,26 +386,35 @@ function automaticCodeBadge(code) {
 
 function scoringControls(moduleId, observation, response) {
   const spec = assessmentSpecFor(moduleId, observation.id, observation.text);
+  const total = totalForObservation(response, spec);
+  const correct = correctForObservation(response, spec);
   const code = deriveObservationCode(response, spec);
   const task = documentationForObservation(moduleId, observation, {});
   const help = response.help || "none";
-  if (spec.type === "count") {
-    return `
-      <div class="task-documentation"><span>Konkrete Aufgabe</span><p>${escapeHtml(task)}</p></div>
-      <div class="scoring-grid">
-        <label class="field"><span>Richtig gelöst</span><div class="score-input"><input type="number" min="0" max="${spec.total}" step="1" data-score-correct="${moduleId}:${observation.id}" value="${response.correct ?? ""}" placeholder="0" /><b>von ${spec.total}</b></div></label>
-        <label class="field"><span>Benötigte Hilfe</span><select data-score-help="${moduleId}:${observation.id}">${HELP_LEVELS.map((entry) => `<option value="${entry.value}" ${help === entry.value ? "selected" : ""}>${entry.label}</option>`).join("")}</select></label>
-        <label class="assessment-check"><input type="checkbox" data-score-nb="${moduleId}:${observation.id}" ${response.notAssessable ? "checked" : ""} /><span>Nicht beurteilbar</span></label>
-        <div class="automatic-result"><span>Automatische Einordnung</span>${automaticCodeBadge(code)}<small>${code ? "aus Ergebnis und benötigter Hilfe" : "Ergebnis eintragen"}</small></div>
-      </div>
-    `;
-  }
+  const percent = correct == null || !total ? null : Math.round((correct / total) * 100);
+  const disabled = response.notAssessable ? "disabled" : "";
+  const resultLabel = spec.editableTotal ? "Gelungen" : "Richtig gelöst";
+  const unitLabel = spec.editableTotal ? (spec.unit || "Beobachtungen") : "";
+
+  const numberControl = spec.editableTotal
+    ? `<div class="score-input score-input-editable">
+        <input type="number" min="0" max="${total || 99}" step="1" data-score-correct="${moduleId}:${observation.id}" value="${correct ?? ""}" placeholder="0" ${disabled} />
+        <b>von</b>
+        <input class="score-total" type="number" min="1" max="99" step="1" data-score-total="${moduleId}:${observation.id}" value="${total || 3}" ${disabled} />
+        <small>${escapeHtml(unitLabel)}</small>
+      </div>`
+    : `<div class="score-input">
+        <input type="number" min="0" max="${spec.total}" step="1" data-score-correct="${moduleId}:${observation.id}" value="${correct ?? ""}" placeholder="0" ${disabled} />
+        <b>von ${spec.total}</b>
+      </div>`;
+
   return `
     <div class="task-documentation"><span>Konkrete Beobachtung / Aufgabe</span><p>${escapeHtml(task)}</p></div>
     <div class="scoring-grid">
-      <label class="field"><span>Beobachtetes Ergebnis</span><select data-score-outcome="${moduleId}:${observation.id}"><option value="">Bitte auswählen</option>${OUTCOME_LEVELS.map((entry) => `<option value="${entry.value}" ${response.outcome === entry.value ? "selected" : ""}>${entry.label}</option>`).join("")}</select></label>
-      <label class="field"><span>Benötigte Hilfe</span><select data-score-help="${moduleId}:${observation.id}" ${response.outcome === "nb" ? "disabled" : ""}>${HELP_LEVELS.map((entry) => `<option value="${entry.value}" ${help === entry.value ? "selected" : ""}>${entry.label}</option>`).join("")}</select></label>
-      <div class="automatic-result"><span>Automatische Einordnung</span>${automaticCodeBadge(code)}<small>${code ? "aus Beobachtung und benötigter Hilfe" : "Ergebnis auswählen"}</small></div>
+      <label class="field"><span>${resultLabel}</span>${numberControl}</label>
+      <label class="field"><span>Benötigte Hilfe</span><select data-score-help="${moduleId}:${observation.id}" ${disabled}>${HELP_LEVELS.map((entry) => `<option value="${entry.value}" ${help === entry.value ? "selected" : ""}>${entry.label}</option>`).join("")}</select></label>
+      <label class="assessment-check"><input type="checkbox" data-score-nb="${moduleId}:${observation.id}" ${response.notAssessable ? "checked" : ""} /><span>Nicht beurteilbar</span></label>
+      <div class="automatic-result"><span>Automatische Einordnung</span>${automaticCodeBadge(code)}<small>${percent == null ? "Zahlen eintragen" : `${correct} von ${total} = ${percent} % · automatisch berechnet`}</small></div>
     </div>
   `;
 }
@@ -833,18 +842,22 @@ app.addEventListener("input", (event) => {
 
 app.addEventListener("change", async (event) => {
   const scoreCorrect = event.target.dataset.scoreCorrect;
-  const scoreOutcome = event.target.dataset.scoreOutcome;
+  const scoreTotal = event.target.dataset.scoreTotal;
   const scoreHelp = event.target.dataset.scoreHelp;
   const scoreNb = event.target.dataset.scoreNb;
-  if (scoreCorrect || scoreOutcome || scoreHelp || scoreNb) {
-    const packed = scoreCorrect || scoreOutcome || scoreHelp || scoreNb;
+  if (scoreCorrect || scoreTotal || scoreHelp || scoreNb) {
+    const packed = scoreCorrect || scoreTotal || scoreHelp || scoreNb;
     const [moduleId, itemId] = packed.split(":");
     const key = responseKey(moduleId, itemId);
     const observation = moduleById(moduleId)?.items.find((item) => item.id === itemId);
     const spec = assessmentSpecFor(moduleId, itemId, observation?.text || "");
     const next = { ...(state.responses[key] || {}), legacyCode: "" };
-    if (scoreCorrect) next.correct = event.target.value;
-    if (scoreOutcome) { next.outcome = event.target.value; next.notAssessable = event.target.value === "nb"; }
+    if (scoreCorrect) { next.correct = event.target.value; next.outcome = ""; }
+    if (scoreTotal) {
+      next.total = event.target.value;
+      next.outcome = "";
+      if (next.correct !== "" && Number(next.correct) > Number(event.target.value)) next.correct = event.target.value;
+    }
     if (scoreHelp) next.help = event.target.value;
     if (scoreNb) next.notAssessable = event.target.checked;
     next.code = deriveObservationCode(next, spec);

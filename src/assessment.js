@@ -13,7 +13,15 @@ export const OUTCOME_LEVELS = [
 ];
 
 const count = (total, task, page, options = {}) => ({ type: "count", total, task, page, ...options });
-const outcome = (task, page, options = {}) => ({ type: "outcome", task, page, ...options });
+const outcome = (task, page, options = {}) => ({
+  type: "count",
+  total: options.total ?? 3,
+  editableTotal: true,
+  unit: options.unit || "Beobachtungen",
+  task,
+  page,
+  ...options
+});
 
 // Die Spezifikationen orientieren sich an den konkreten Aufgaben des Screening-Baukastens.
 // Wo ein App-Beobachtungspunkt mehrere Originalaufgaben bündelt, wird bewusst qualitativ
@@ -218,34 +226,50 @@ function helpBasedCode(help) {
   return "++";
 }
 
+export function totalForObservation(response = {}, spec = {}) {
+  const fallback = Number(spec.total) || 0;
+  if (!spec.editableTotal) return fallback;
+  const entered = Number(response.total);
+  return Number.isFinite(entered) && entered > 0 ? Math.round(entered) : fallback;
+}
+
+export function correctForObservation(response = {}, spec = {}) {
+  const total = totalForObservation(response, spec);
+  if (response.correct !== "" && response.correct != null && !Number.isNaN(Number(response.correct))) {
+    return Math.max(0, Math.min(total, Number(response.correct)));
+  }
+  // Alte Auswahlwerte werden nur zur Migration vorhandener lokaler Daten verwendet.
+  if (response.outcome === "secure") return total;
+  if (response.outcome === "partial") return Math.max(1, Math.ceil(total * 0.6));
+  if (response.outcome === "not") return 0;
+  return null;
+}
+
 export function deriveObservationCode(response = {}, spec = {}) {
   if (response.notAssessable || response.outcome === "nb") return "?";
-  if (spec.type === "count") {
-    if (response.correct === "" || response.correct == null || Number.isNaN(Number(response.correct))) return response.legacyCode || "";
-    const total = Number(spec.total) || 0;
-    if (!total) return "";
-    const correct = Math.max(0, Math.min(total, Number(response.correct)));
-    const ratio = correct / total;
-    if (ratio >= (spec.secureThreshold ?? 0.9)) return helpBasedCode(response.help || "none");
-    if (ratio >= (spec.partialThreshold ?? 0.6)) return "o";
-    return "-";
-  }
-  if (!response.outcome) return response.legacyCode || "";
-  if (response.outcome === "secure") return helpBasedCode(response.help || "none");
-  if (response.outcome === "partial") return "o";
-  if (response.outcome === "not") return "-";
-  return "";
+  const total = totalForObservation(response, spec);
+  const correct = correctForObservation(response, spec);
+  if (!total || correct == null) return response.legacyCode || "";
+
+  const ratio = correct / total;
+  // Regelbasierte pädagogische Einordnung, keine Normierung:
+  // ab 90 % gilt die Aufgabe als sicher genug, sodass die benötigte Hilfe den Code bestimmt;
+  // 60–89 % werden als noch unterstützungsbedürftig (o), darunter als noch nicht gezeigt (-) eingeordnet.
+  if (ratio >= (spec.secureThreshold ?? 0.9)) return helpBasedCode(response.help || "none");
+  if (ratio >= (spec.partialThreshold ?? 0.6)) return "o";
+  return "-";
 }
 
 export function documentationForObservation(moduleId, observation, response = {}) {
   const spec = assessmentSpecFor(moduleId, observation.id, observation.text);
   const parts = [spec.task];
-  if (spec.type === "count" && response.correct !== "" && response.correct != null) {
-    parts.push(`Ergebnis ${Number(response.correct)}/${spec.total}`);
-  } else if (spec.type === "outcome" && response.outcome) {
-    parts.push(`Ergebnis: ${outcomeLabel(response.outcome)}`);
+  const total = totalForObservation(response, spec);
+  const correct = correctForObservation(response, spec);
+  if (correct != null && total) {
+    const unit = spec.editableTotal ? ` ${spec.unit || "Beobachtungen"}` : "";
+    parts.push(`Ergebnis ${correct}/${total}${unit}`);
   }
-  if (response.help && response.outcome !== "nb") parts.push(helpLabel(response.help));
+  if (response.help && !response.notAssessable && response.outcome !== "nb") parts.push(helpLabel(response.help));
   if (spec.page) parts.push(`Screening-Baukasten S. ${spec.page}`);
   return parts.filter(Boolean).join(" · ");
 }

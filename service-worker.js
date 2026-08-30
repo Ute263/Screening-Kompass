@@ -1,4 +1,4 @@
-const CACHE_NAME = "screening-kompass-v6";
+const CACHE_NAME = "screening-kompass-v7";
 const APP_SHELL = [
   "./",
   "./index.html",

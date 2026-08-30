@@ -1490,6 +1490,20 @@ p {
   white-space: nowrap;
 }
 
+.score-input-editable {
+  grid-template-columns: minmax(64px, 92px) auto minmax(64px, 92px) minmax(90px, 1fr);
+}
+
+.score-input-editable .score-total {
+  width: 100%;
+}
+
+.score-input-editable small {
+  color: #7c8999;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
 .assessment-check {
   display: inline-flex;
   min-height: 43px;
@@ -1541,6 +1555,7 @@ p {
   .page-heading-actions .button { width: 100%; }
   .observation-row > .auto-code { grid-column: 2; margin-top: 7px; }
   .scoring-grid { grid-template-columns: 1fr; }
+  .score-input-editable { grid-template-columns: minmax(62px, 84px) auto minmax(62px, 84px) minmax(80px, 1fr); }
   .automatic-result { grid-template-columns: minmax(0, 1fr) auto; }
   .competency-row > .competency-documentation { grid-column: 1 / 3; }
 }
