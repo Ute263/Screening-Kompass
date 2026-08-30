@@ -359,7 +359,13 @@ function printMaterialsView() {
 function moduleRail(currentModule) {
   return `
     <aside class="module-rail no-print">
-      <div class="rail-heading"><strong>Ausgewählte Module</strong><button class="icon-button" data-action="nav" data-view="modules" aria-label="Modulauswahl ändern">${icon("grid", 18)}</button></div>
+      <div class="rail-heading">
+        <strong>Ausgewählte Module</strong>
+        <div class="rail-heading-actions">
+          <button class="button-link" data-action="nav" data-view="material">${icon("print", 15)} Material & Druck</button>
+          <button class="icon-button" data-action="nav" data-view="modules" aria-label="Modulauswahl ändern">${icon("grid", 18)}</button>
+        </div>
+      </div>
       ${MODULE_GROUPS.map((group) => {
         const modules = MODULES.filter((module) => module.group === group && state.selectedModules.includes(module.id));
         if (!modules.length) return "";
@@ -409,12 +415,12 @@ function scoringControls(moduleId, observation, response) {
       </div>`;
 
   return `
-    <div class="task-documentation"><span>Konkrete Beobachtung / Aufgabe</span><p>${escapeHtml(task)}</p></div>
-    <div class="scoring-grid">
-      <label class="field"><span>${resultLabel}</span>${numberControl}</label>
-      <label class="field"><span>Benötigte Hilfe</span><select data-score-help="${moduleId}:${observation.id}" ${disabled}>${HELP_LEVELS.map((entry) => `<option value="${entry.value}" ${help === entry.value ? "selected" : ""}>${entry.label}</option>`).join("")}</select></label>
-      <label class="assessment-check"><input type="checkbox" data-score-nb="${moduleId}:${observation.id}" ${response.notAssessable ? "checked" : ""} /><span>Nicht beurteilbar</span></label>
-      <div class="automatic-result"><span>Automatische Einordnung</span>${automaticCodeBadge(code)}<small>${percent == null ? "Zahlen eintragen" : `${correct} von ${total} = ${percent} % · automatisch berechnet`}</small></div>
+    <div class="task-documentation task-documentation-compact"><span>Aufgabe</span><p>${escapeHtml(task)}</p></div>
+    <div class="scoring-grid scoring-grid-compact">
+      <label class="field field-compact"><span>${resultLabel}</span>${numberControl}</label>
+      <label class="field field-compact"><span>Hilfe</span><select data-score-help="${moduleId}:${observation.id}" ${disabled}>${HELP_LEVELS.map((entry) => `<option value="${entry.value}" ${help === entry.value ? "selected" : ""}>${entry.label}</option>`).join("")}</select></label>
+      <label class="assessment-check assessment-check-card"><input type="checkbox" data-score-nb="${moduleId}:${observation.id}" ${response.notAssessable ? "checked" : ""} /><span>Nicht beurteilbar</span></label>
+      <div class="automatic-result automatic-result-compact"><span>Code</span>${automaticCodeBadge(code)}<small>${percent == null ? "Zahlen eintragen" : `${correct} von ${total} = ${percent} % · automatisch berechnet`}</small></div>
     </div>
   `;
 }
@@ -447,11 +453,11 @@ function observeView() {
       ${moduleRail(currentModule)}
       <section class="workspace-main">
         <div class="workspace-title">
-          <div><h1>${currentModule.id} · ${currentModule.title}</h1><p>${currentModule.description}</p><small class="auto-scoring-note">Die App leitet ++ / + / o / - / ? aus Ergebnis und benötigter Hilfe ab.</small></div>
+          <div><h1>${currentModule.id} · ${currentModule.title}</h1><p>${currentModule.description}</p><small class="auto-scoring-note">Nur Ergebnis und Hilfe eintragen – den Code berechnet die App automatisch.</small></div>
           <span>${moduleProgress.answered} von ${moduleProgress.total} dokumentiert</span>
         </div>
         <div class="observation-table" role="table" aria-label="Beobachtungsaspekte">
-          <div class="observation-head" role="row"><span>Nr.</span><span>Beobachtungsaspekt</span><span>App-Einordnung</span></div>
+          <div class="observation-head" role="row"><span>Nr.</span><span>Beobachtungsaspekt</span><span>Code</span></div>
           ${currentModule.items.map((observation, itemIndex) => {
             const key = responseKey(currentModule.id, observation.id);
             const response = state.responses[key] || {};
@@ -465,10 +471,13 @@ function observeView() {
               ${active ? `
                 <div class="observation-detail">
                   ${scoringControls(currentModule.id, observation, response)}
-                  <div class="detail-grid">
-                    <label class="field field-wide"><span>Zusätzliche Beobachtung (optional)</span><textarea rows="3" data-response-field="evidence" data-response-key="${key}" placeholder="Nur Besonderheiten ergänzen, die aus Aufgabe und Ergebnis nicht hervorgehen.">${escapeHtml(response.evidence || "")}</textarea></label>
-                    <label class="field"><span>Situation / Tagesform (optional)</span><input data-response-field="context" data-response-key="${key}" value="${escapeHtml(response.context || "")}" placeholder="z. B. Einzelarbeit, ausgeruht" /></label>
-                  </div>
+                  <details class="optional-notes" ${(response.evidence || response.context) ? "open" : ""}>
+                    <summary>Optionale Notizen</summary>
+                    <div class="detail-grid">
+                      <label class="field field-wide"><span>Zusätzliche Beobachtung</span><textarea rows="3" data-response-field="evidence" data-response-key="${key}" placeholder="Nur Besonderheiten ergänzen, die aus Aufgabe und Ergebnis nicht hervorgehen.">${escapeHtml(response.evidence || "")}</textarea></label>
+                      <label class="field"><span>Situation / Tagesform</span><input data-response-field="context" data-response-key="${key}" value="${escapeHtml(response.context || "")}" placeholder="z. B. Einzelarbeit, ausgeruht" /></label>
+                    </div>
+                  </details>
                 </div>
               ` : ""}
             `;
@@ -476,22 +485,21 @@ function observeView() {
         </div>
       </section>
       <aside class="inspector no-print">
-        <div class="inspector-heading"><h2>Zuordnung zum FörderKompass</h2>${icon("info", 18)}</div>
-        <div class="notice notice-yellow compact">${icon("info", 17)}<p>Vorschlag – bitte fachlich prüfen</p></div>
-        ${activeCompetencies.length ? activeCompetencies.map((competency) => `
-          <section class="mapping-block">
-            <h3>${competency.areaLabel}</h3>
-            <p><small>${competency.subareaLabel}</small><br /><strong>${competency.label}</strong></p>
-            <span class="mapping-result">${deriveObservationCode(activeResponse, assessmentSpecFor(currentModule.id, activeItem.id, activeItem.text)) ? `Automatisch ${deriveObservationCode(activeResponse, assessmentSpecFor(currentModule.id, activeItem.id, activeItem.text))} → ${competency.row?.rating === "nb" ? "n. b." : competency.row?.rating || "offen"}` : "Noch kein auswertbares Ergebnis"}</span>
+        <div class="inspector-heading"><h2>FörderKompass-Zuordnung</h2>${icon("info", 18)}</div>
+        <div class="notice notice-yellow compact">${icon("info", 17)}<p>Vorschlag – fachlich prüfen</p></div>
+        ${activeCompetencies.length ? `<div class="mapping-list">${activeCompetencies.map((competency) => `
+          <section class="mapping-block mapping-block-compact">
+            <small>${competency.areaLabel} · ${competency.subareaLabel}</small>
+            <strong>${competency.label}</strong>
+            <span class="mapping-result">${deriveObservationCode(activeResponse, assessmentSpecFor(currentModule.id, activeItem.id, activeItem.text)) ? `${deriveObservationCode(activeResponse, assessmentSpecFor(currentModule.id, activeItem.id, activeItem.text))} → ${competency.row?.rating === "nb" ? "n. b." : competency.row?.rating || "offen"}` : "Noch kein auswertbares Ergebnis"}</span>
           </section>
-        `).join("") : `<div class="notice compact"><p>Diese Beobachtung liefert Kontext, bewertet aber bewusst keine einzelne FörderKompass-Kompetenz automatisch.</p></div>`}
+        `).join("")}</div>` : `<div class="notice compact"><p>Diese Beobachtung liefert Kontext, aber keine direkte automatische Kompetenzzuordnung.</p></div>`}
         <button class="button button-secondary button-block" data-action="toggle-priority" data-profile="${activeCompetencies[0]?.id || ""}" ${!deriveObservationCode(activeResponse, assessmentSpecFor(currentModule.id, activeItem.id, activeItem.text)) || !activeCompetencies.length ? "disabled" : ""}>
           ${icon("star", 17)} ${activeCompetencies[0]?.row?.isPriority ? "Priorität entfernen" : "Als Priorität vormerken"}
         </button>
-        <div class="code-legend">
-          <h3>Automatische Codes</h3>
+        <div class="code-legend code-legend-compact">
+          <h3>Codes kurz erklärt</h3>
           ${EVIDENCE_CODES.map((code) => `<p><strong>${code.short}</strong><span>${code.label}</span></p>`).join("")}
-          <button class="button button-quiet button-block" data-action="nav" data-view="material">${icon("print", 16)} Material & Druck</button>
         </div>
       </aside>
       <footer class="workspace-footer no-print">
