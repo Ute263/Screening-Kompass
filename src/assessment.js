@@ -246,30 +246,12 @@ export function correctForObservation(response = {}, spec = {}) {
 }
 
 export function deriveObservationCode(response = {}, spec = {}) {
-  if (response.notAssessable || response.outcome === "nb") return "?";
-  const total = totalForObservation(response, spec);
-  const correct = correctForObservation(response, spec);
-  if (!total || correct == null) return response.legacyCode || "";
-
-  const ratio = correct / total;
-  // Regelbasierte pädagogische Einordnung, keine Normierung:
-  // ab 90 % gilt die Aufgabe als sicher genug, sodass die benötigte Hilfe den Code bestimmt;
-  // 60–89 % werden als noch unterstützungsbedürftig (o), darunter als noch nicht gezeigt (-) eingeordnet.
-  if (ratio >= (spec.secureThreshold ?? 0.9)) return helpBasedCode(response.help || "none");
-  if (ratio >= (spec.partialThreshold ?? 0.6)) return "o";
-  return "-";
+  return response.code || response.legacyCode || "";
 }
 
 export function documentationForObservation(moduleId, observation, response = {}) {
   const spec = assessmentSpecFor(moduleId, observation.id, observation.text);
   const parts = [spec.task];
-  const total = totalForObservation(response, spec);
-  const correct = correctForObservation(response, spec);
-  if (correct != null && total) {
-    const unit = spec.editableTotal ? ` ${spec.unit || "Beobachtungen"}` : "";
-    parts.push(`Ergebnis ${correct}/${total}${unit}`);
-  }
-  if (response.help && !response.notAssessable && response.outcome !== "nb") parts.push(helpLabel(response.help));
   if (spec.page) parts.push(`Screening-Baukasten S. ${spec.page}`);
   return parts.filter(Boolean).join(" · ");
 }

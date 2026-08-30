@@ -391,36 +391,19 @@ function automaticCodeBadge(code) {
 }
 
 function scoringControls(moduleId, observation, response) {
-  const spec = assessmentSpecFor(moduleId, observation.id, observation.text);
-  const total = totalForObservation(response, spec);
-  const correct = correctForObservation(response, spec);
-  const code = deriveObservationCode(response, spec);
   const task = documentationForObservation(moduleId, observation, {});
-  const help = response.help || "none";
-  const percent = correct == null || !total ? null : Math.round((correct / total) * 100);
-  const disabled = response.notAssessable ? "disabled" : "";
-  const resultLabel = spec.editableTotal ? "Gelungen" : "Richtig gelöst";
-  const unitLabel = spec.editableTotal ? (spec.unit || "Beobachtungen") : "";
-
-  const numberControl = spec.editableTotal
-    ? `<div class="score-input score-input-editable">
-        <input type="number" min="0" max="${total || 99}" step="1" data-score-correct="${moduleId}:${observation.id}" value="${correct ?? ""}" placeholder="0" ${disabled} />
-        <b>von</b>
-        <input class="score-total" type="number" min="1" max="99" step="1" data-score-total="${moduleId}:${observation.id}" value="${total || 3}" ${disabled} />
-        <small>${escapeHtml(unitLabel)}</small>
-      </div>`
-    : `<div class="score-input">
-        <input type="number" min="0" max="${spec.total}" step="1" data-score-correct="${moduleId}:${observation.id}" value="${correct ?? ""}" placeholder="0" ${disabled} />
-        <b>von ${spec.total}</b>
-      </div>`;
-
+  const selectedCode = response.code || response.legacyCode || "";
   return `
     <div class="task-documentation task-documentation-compact"><span>Aufgabe</span><p>${escapeHtml(task)}</p></div>
-    <div class="scoring-grid scoring-grid-compact">
-      <label class="field field-compact"><span>${resultLabel}</span>${numberControl}</label>
-      <label class="field field-compact"><span>Hilfe</span><select data-score-help="${moduleId}:${observation.id}" ${disabled}>${HELP_LEVELS.map((entry) => `<option value="${entry.value}" ${help === entry.value ? "selected" : ""}>${entry.label}</option>`).join("")}</select></label>
-      <label class="assessment-check assessment-check-card"><input type="checkbox" data-score-nb="${moduleId}:${observation.id}" ${response.notAssessable ? "checked" : ""} /><span>Nicht beurteilbar</span></label>
-      <div class="automatic-result automatic-result-compact"><span>Code</span>${automaticCodeBadge(code)}<small>${percent == null ? "Zahlen eintragen" : `${correct} von ${total} = ${percent} % · automatisch berechnet`}</small></div>
+    <div class="manual-rating-block">
+      <span class="manual-rating-label">Einschätzung</span>
+      <div class="manual-rating-buttons" role="group" aria-label="Einschätzung auswählen">
+        ${EVIDENCE_CODES.map((entry) => `
+          <button type="button" class="manual-rating-button ${selectedCode === entry.value ? "is-selected" : ""}" data-action="set-code" data-key="${moduleId}:${observation.id}" data-code="${entry.value}" title="${escapeHtml(entry.label)}">
+            <strong>${entry.short}</strong><small>${escapeHtml(entry.label)}</small>
+          </button>
+        `).join("")}
+      </div>
     </div>
   `;
 }
@@ -453,7 +436,7 @@ function observeView() {
       ${moduleRail(currentModule)}
       <section class="workspace-main">
         <div class="workspace-title">
-          <div><h1>${currentModule.id} · ${currentModule.title}</h1><p>${currentModule.description}</p><small class="auto-scoring-note">Nur Ergebnis und Hilfe eintragen – den Code berechnet die App automatisch.</small></div>
+          <div><h1>${currentModule.id} · ${currentModule.title}</h1><p>${currentModule.description}</p><small class="auto-scoring-note">Die Einschätzung ++ / + / o / - / ? wird direkt von der Lehrkraft gewählt.</small></div>
           <span>${moduleProgress.answered} von ${moduleProgress.total} dokumentiert</span>
         </div>
         <div class="observation-table" role="table" aria-label="Beobachtungsaspekte">
@@ -491,14 +474,14 @@ function observeView() {
           <section class="mapping-block mapping-block-compact">
             <small>${competency.areaLabel} · ${competency.subareaLabel}</small>
             <strong>${competency.label}</strong>
-            <span class="mapping-result">${deriveObservationCode(activeResponse, assessmentSpecFor(currentModule.id, activeItem.id, activeItem.text)) ? `${deriveObservationCode(activeResponse, assessmentSpecFor(currentModule.id, activeItem.id, activeItem.text))} → ${competency.row?.rating === "nb" ? "n. b." : competency.row?.rating || "offen"}` : "Noch kein auswertbares Ergebnis"}</span>
+            <span class="mapping-result">${deriveObservationCode(activeResponse, assessmentSpecFor(currentModule.id, activeItem.id, activeItem.text)) ? `${deriveObservationCode(activeResponse, assessmentSpecFor(currentModule.id, activeItem.id, activeItem.text))} → ${competency.row?.rating === "nb" ? "n. b." : competency.row?.rating || "offen"}` : "Noch keine Einschätzung"}</span>
           </section>
-        `).join("")}</div>` : `<div class="notice compact"><p>Diese Beobachtung liefert Kontext, aber keine direkte automatische Kompetenzzuordnung.</p></div>`}
+        `).join("")}</div>` : `<div class="notice compact"><p>Diese Beobachtung liefert Kontext, aber keine direkte Kompetenzzuordnung.</p></div>`}
         <button class="button button-secondary button-block" data-action="toggle-priority" data-profile="${activeCompetencies[0]?.id || ""}" ${!deriveObservationCode(activeResponse, assessmentSpecFor(currentModule.id, activeItem.id, activeItem.text)) || !activeCompetencies.length ? "disabled" : ""}>
           ${icon("star", 17)} ${activeCompetencies[0]?.row?.isPriority ? "Priorität entfernen" : "Als Priorität vormerken"}
         </button>
         <div class="code-legend code-legend-compact">
-          <h3>Codes kurz erklärt</h3>
+          <h3>Codes</h3>
           ${EVIDENCE_CODES.map((code) => `<p><strong>${code.short}</strong><span>${code.label}</span></p>`).join("")}
         </div>
       </aside>
@@ -625,7 +608,7 @@ function evaluateView() {
       </aside>
       <section class="workspace-main">
         <div class="workspace-title"><div><h1>Auswertung</h1><p>Belege auf Ebene einzelner FörderKompass-Kompetenzen prüfen und bis zu drei Bereiche für die spätere Übertragung vormerken.</p></div><span>${state.priorities.length} von 3 vorgemerkt</span></div>
-        <div class="profile-heading"><h2>Kompetenzprofil</h2><p>Die Einordnung gilt nur für die benannte Einzelkompetenz und wird automatisch aus den dokumentierten Aufgaben abgeleitet.</p></div>
+        <div class="profile-heading"><h2>Kompetenzprofil</h2><p>Die Einordnung gilt nur für die benannte Einzelkompetenz und wird aus den dokumentierten Einschätzungen zusammengeführt.</p></div>
         ${filtered.length ? `
           <div class="profile-table">
             <div class="profile-head"><span>Förderbereich</span><span>Unterbereich / Kompetenz</span><span>Ergebnis</span><span>Dokumentation</span><span>Priorität</span></div>
@@ -669,7 +652,7 @@ function resultsView() {
   return `
     <main class="report-page">
       <section class="report-toolbar no-print">
-        <div><h1>Screening-Ergebnisse</h1><p>Beobachtungen, automatische Einordnungen und zugeordnete Screeningaufgaben als PDF sichern oder ausdrucken.</p></div>
+        <div><h1>Screening-Ergebnisse</h1><p>Beobachtungen, Einschätzungen und zugeordnete Screeningaufgaben als PDF sichern oder ausdrucken.</p></div>
         <div class="toolbar-actions">
           <button class="button button-secondary" data-action="nav" data-view="evaluate">Zur Auswertung</button>
           <button class="button button-primary" data-action="print">${icon("doc", 17)} Ergebnisse drucken / PDF</button>
@@ -761,6 +744,25 @@ app.addEventListener("click", async (event) => {
     state.currentItemIndex = Number(target.dataset.index);
     persist({ rerender: true });
   }
+  if (action === "set-code") {
+    const packed = target.dataset.key;
+    const code = target.dataset.code;
+    if (!packed || !code) return;
+    const [moduleId, itemId] = packed.split(":");
+    const key = responseKey(moduleId, itemId);
+    const current = state.responses[key] || {};
+    state.responses[key] = {
+      ...current,
+      code,
+      legacyCode: code,
+      correct: undefined,
+      total: undefined,
+      help: undefined,
+      outcome: undefined,
+      notAssessable: undefined
+    };
+    persist({ rerender: true });
+  }
   if (action === "previous-item") nextObservation(-1);
   if (action === "next-item") nextObservation(1);
   if (action === "filter-area") {
@@ -849,30 +851,6 @@ app.addEventListener("input", (event) => {
 });
 
 app.addEventListener("change", async (event) => {
-  const scoreCorrect = event.target.dataset.scoreCorrect;
-  const scoreTotal = event.target.dataset.scoreTotal;
-  const scoreHelp = event.target.dataset.scoreHelp;
-  const scoreNb = event.target.dataset.scoreNb;
-  if (scoreCorrect || scoreTotal || scoreHelp || scoreNb) {
-    const packed = scoreCorrect || scoreTotal || scoreHelp || scoreNb;
-    const [moduleId, itemId] = packed.split(":");
-    const key = responseKey(moduleId, itemId);
-    const observation = moduleById(moduleId)?.items.find((item) => item.id === itemId);
-    const spec = assessmentSpecFor(moduleId, itemId, observation?.text || "");
-    const next = { ...(state.responses[key] || {}), legacyCode: "" };
-    if (scoreCorrect) { next.correct = event.target.value; next.outcome = ""; }
-    if (scoreTotal) {
-      next.total = event.target.value;
-      next.outcome = "";
-      if (next.correct !== "" && Number(next.correct) > Number(event.target.value)) next.correct = event.target.value;
-    }
-    if (scoreHelp) next.help = event.target.value;
-    if (scoreNb) next.notAssessable = event.target.checked;
-    next.code = deriveObservationCode(next, spec);
-    state.responses[key] = next;
-    persist({ rerender: true });
-    return;
-  }
   const moduleId = event.target.dataset.moduleToggle;
   if (moduleId) {
     const wasSelected = state.selectedModules.includes(moduleId);

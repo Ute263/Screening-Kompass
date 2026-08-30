@@ -1660,3 +1660,61 @@ p {
   .automatic-result { grid-template-columns: minmax(0, 1fr) auto; }
   .competency-row > .competency-documentation { grid-column: 1 / 3; }
 }
+
+
+.manual-rating-block {
+  display: grid;
+  gap: 8px;
+}
+
+.manual-rating-label {
+  color: #33465f;
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.manual-rating-buttons {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.manual-rating-button {
+  display: grid;
+  gap: 3px;
+  min-height: 58px;
+  padding: 7px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  color: #40546c;
+  background: #fff;
+  text-align: center;
+}
+
+.manual-rating-button strong {
+  color: var(--navy);
+  font-size: 1rem;
+}
+
+.manual-rating-button small {
+  overflow: hidden;
+  color: #68798d;
+  font-size: 0.62rem;
+  line-height: 1.25;
+}
+
+.manual-rating-button:hover {
+  border-color: var(--blue);
+  background: #f7fbff;
+}
+
+.manual-rating-button.is-selected {
+  border-color: var(--blue);
+  background: var(--surface-blue);
+  box-shadow: inset 0 0 0 1px var(--blue);
+}
+
+@media (max-width: 720px) {
+  .manual-rating-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .manual-rating-button:last-child { grid-column: 1 / -1; }
+}
